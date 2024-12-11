@@ -74,7 +74,7 @@ import java_cup.runtime.Symbol;
 "++" { return new_symbol(sym.POSTINC,yytext()); }
 "+" { return new_symbol(sym.PLUS,yytext()); }
 "--" { return new_symbol(sym.POSTDEC,yytext()); }
-"-" { return new_symbol(sym.MINUS,yytext()); }
+"-" | "\u2010" { return new_symbol(sym.MINUS, yytext()); }
 "*" { return new_symbol(sym.MUL,yytext()); }
 "/" { return new_symbol(sym.DIV,yytext()); }
 "=" { return new_symbol(sym.EQUAL,yytext()); }

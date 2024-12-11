@@ -4,6 +4,7 @@
 		<delete>
 			<fileset dir="./src/com/kosta/pp1">
 				<exclude name="sym.java"/>
+				<exclude name="utils/Log4JUtils.java"/>
 			</fileset>
 		</delete>
 	</target>

@@ -1,4 +1,7 @@
 program p
+char c = 'a';
+bool t = false;
+
 const int tableSize = 10;
 set s1;
 class Table {
@@ -16,6 +19,7 @@ int rows, columns;
 {
 void f(char ch, int a, int arg)
 int x;
+int a = x -a;
 {
 x = arg;
 }
