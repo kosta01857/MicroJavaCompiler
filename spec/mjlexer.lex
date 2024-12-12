@@ -38,7 +38,6 @@ import java_cup.runtime.Symbol;
 "extends" { return new_symbol(sym.EXTENDS,yytext()); }
 "map" { return new_symbol(sym.MAP,yytext()); }
 
-"for" { return new_symbol(sym.FOR,yytext()); }
 "if" { return new_symbol(sym.IF,yytext()); }
 "else" { return new_symbol(sym.ELSE,yytext()); }
 "continue" { return new_symbol(sym.CONTINUE,yytext()); }
@@ -54,11 +53,8 @@ import java_cup.runtime.Symbol;
 "add" { return new_symbol(sym.ADD,yytext()); }
 
 
-"int" { return new_symbol(sym.INT,yytext()); }
 "set" { return new_symbol(sym.SET,yytext()); }
 "void" { return new_symbol(sym.VOID,yytext()); }
-"char" { return new_symbol(sym.CHAR,yytext()); }
-"bool" { return new_symbol(sym.BOOL,yytext()); }
 
 "!=" { return new_symbol(sym.NEQ,yytext()); }
 "!" { return new_symbol(sym.NOT,yytext()); }

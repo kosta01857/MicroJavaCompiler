@@ -1,0 +1,19 @@
+package com.kosta.pp1;
+
+import java_cup.runtime.*;
+
+
+terminal PROGRAM, RETURN , CONST , CLASS , INTERFACE , EXTENDS , MAP , DO , WHILE , IF , ELSE, CONTINUE , BREAK , PRINT;
+terminal READ  , ORD   , CHR   , LEN   , ADD   , INT   , SET   , CHAR  , BOOL  , VOID  , PLUS;
+terminal POSTINC , MINUS , POSTDEC, MUL , DIV , MOD , NEW , UNION, EQUAL , DOT , COMMA , SEMI  , COLON , LPAREN , RPAREN , LBRACE, RBRACE;
+terminal LSQBRACE, RSQBRACE, GT , LT , EQ , NEQ , GTE , LTE , NOT , AND , OR , EOF;
+terminal Integer NUMBER;
+terminal Character CHAR_CONST;
+terminal Boolean BOOL_CONST;
+terminal String IDENT;
+
+
+nonterminal DesignatorStatement,Statement,Expr,Term,Factor,Designator,Addop,Mulop,Setop,ActPars
+nonterminal Condition,CondTerm
+
+

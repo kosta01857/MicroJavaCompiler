@@ -1,6 +1,6 @@
 package com.kosta.pp1;
 
-public class sym {
+public class sym_old {
     // Keywords
     public static final int PROGRAM = 0;
     public static final int RETURN = 2;
