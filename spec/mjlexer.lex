@@ -5,19 +5,24 @@ import java_cup.runtime.Symbol;
 %%
 
 %{
-	private Symbol new_symbol(int type){
-		return new Symbol(type,yyline+1,yycolumn);
+
+	// ukljucivanje informacije o poziciji tokena
+	private Symbol new_symbol(int type) {
+		return new Symbol(type, yyline+1, yycolumn);
 	}
 	
-	private Symbol new_symbol(int type,Object value){
-		return new Symbol(type,yyline+1,yycolumn,value);
+	// ukljucivanje informacije o poziciji tokena
+	private Symbol new_symbol(int type, Object value) {
+		return new Symbol(type, yyline+1, yycolumn, value);
 	}
-%}
 
+%}
 
 %cup
 %line
 %column
+
+%xstate COMMENT
 
 %eofval{
 	return new_symbol(sym.EOF);
@@ -25,18 +30,20 @@ import java_cup.runtime.Symbol;
 
 %%
 
-[ \t\f]+ {}
-[\r\n]+ {yyline++; }
+
+[ \t\f\b]+ {}
+[\r\n]+ {}
 
 
 
-"program" { return new_symbol(sym.PROGRAM,yytext()); }
+"program" { return new_symbol(sym.PROG,yytext()); }
 "return" { return new_symbol(sym.RETURN,yytext()); }
 "const" { return new_symbol(sym.CONST,yytext()); }
 "class" { return new_symbol(sym.CLASS,yytext()); }
 "interface" { return new_symbol(sym.INTERFACE,yytext()); }
 "extends" { return new_symbol(sym.EXTENDS,yytext()); }
 "map" { return new_symbol(sym.MAP,yytext()); }
+"new" { return new_symbol(sym.NEW,yytext()); }
 
 "if" { return new_symbol(sym.IF,yytext()); }
 "else" { return new_symbol(sym.ELSE,yytext()); }
@@ -47,17 +54,11 @@ import java_cup.runtime.Symbol;
 
 "print" { return new_symbol(sym.PRINT,yytext()); }
 "read" { return new_symbol(sym.READ,yytext()); }
-"ord" { return new_symbol(sym.ORD,yytext()); }
-"len" { return new_symbol(sym.LEN,yytext()); }
-"chr" { return new_symbol(sym.CHR,yytext()); }
-"add" { return new_symbol(sym.ADD,yytext()); }
 
 
-"set" { return new_symbol(sym.SET,yytext()); }
 "void" { return new_symbol(sym.VOID,yytext()); }
 
 "!=" { return new_symbol(sym.NEQ,yytext()); }
-"!" { return new_symbol(sym.NOT,yytext()); }
 "==" { return new_symbol(sym.EQ,yytext()); }
 "<=" { return new_symbol(sym.LTE,yytext()); }
 ">=" { return new_symbol(sym.GTE,yytext()); }
@@ -78,7 +79,6 @@ import java_cup.runtime.Symbol;
 "union" { return new_symbol(sym.UNION,yytext()); }
 
 ";" { return new_symbol(sym.SEMI,yytext()); }
-":" { return new_symbol(sym.COLON,yytext()); }
 "," { return new_symbol(sym.COMMA,yytext()); }
 "(" { return new_symbol(sym.LPAREN,yytext()); } 
 ")" { return new_symbol(sym.RPAREN,yytext()); }
@@ -94,4 +94,4 @@ import java_cup.runtime.Symbol;
 [0-9]+ { return new_symbol(sym.NUMBER, Integer.valueOf(yytext())); }
 [a-zA-Z][a-zA-Z0-9_]* { return new_symbol(sym.IDENT, yytext()); }
 "'"[ -~]"'" { return new_symbol(sym.CHAR_CONST,Character.valueOf(yytext().charAt(1))); }
-. { System.out.println("Lexing ERROR (" + yytext()+") at line "+(yyline+1)); }
+. { System.err.println("Leksicka greska ("+yytext()+") u liniji "+(yyline+1)); }

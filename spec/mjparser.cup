@@ -1,19 +1,244 @@
 package com.kosta.pp1;
 
 import java_cup.runtime.*;
+import org.apache.log4j.*;
+import com.kosta.pp1.ast.*;
+
+parser code {:
+
+    Logger log = Logger.getLogger(getClass());
+
+    // Error reporting methods
+    public void report_fatal_error(String message, Object info) throws java.lang.Exception {
+        done_parsing();
+        report_error(message, info);
+    }
+
+    public void syntax_error(Symbol cur_token) {
+        report_error("\nSintaksna greska", cur_token);
+    }
+
+    public void unrecovered_syntax_error(Symbol cur_token) throws java.lang.Exception {
+        report_fatal_error("Fatalna greska, parsiranje se ne moze nastaviti", cur_token);
+    }
+
+    public void report_error(String message, Object info) {
+        StringBuilder msg = new StringBuilder(message); 
+        if (info instanceof Symbol)
+            msg.append(" na liniji ").append(((Symbol)info).left);
+        log.error(msg.toString());
+    }
+
+:}
+
+scan with {:
+    Symbol s = this.getScanner().next_token();
+    if (s != null && s.value != null) 
+        log.info(s.toString() + " " + s.value.toString());
+    return s;
+:}
 
 
-terminal PROGRAM, RETURN , CONST , CLASS , INTERFACE , EXTENDS , MAP , DO , WHILE , IF , ELSE, CONTINUE , BREAK , PRINT;
-terminal READ  , ORD   , CHR   , LEN   , ADD   , INT   , SET   , CHAR  , BOOL  , VOID  , PLUS;
-terminal POSTINC , MINUS , POSTDEC, MUL , DIV , MOD , NEW , UNION, EQUAL , DOT , COMMA , SEMI  , COLON , LPAREN , RPAREN , LBRACE, RBRACE;
-terminal LSQBRACE, RSQBRACE, GT , LT , EQ , NEQ , GTE , LTE , NOT , AND , OR , EOF;
+
+terminal PROG, RETURN, CONST, CLASS, INTERFACE, EXTENDS, MAP, DO, WHILE, IF, ELSE, CONTINUE, BREAK, PRINT;
+terminal READ,VOID, PLUS, POSTINC, MINUS, POSTDEC, MUL, DIV, MOD, NEW, UNION;
+terminal EQUAL, DOT, COMMA, SEMI, LPAREN, RPAREN, LBRACE, RBRACE, LSQBRACE, RSQBRACE, GT, LT, EQ, NEQ, GTE, LTE,AND, OR;
 terminal Integer NUMBER;
 terminal Character CHAR_CONST;
 terminal Boolean BOOL_CONST;
 terminal String IDENT;
 
+nonterminal Program, Declarations, MethodDeclarations;
+nonterminal ConstDeclarations, VarDeclarations, ClassDeclaration, InterfaceDeclaration; 
+nonterminal MethodDeclaration;
+nonterminal Type, ClassBody, Literal, IdDeclaration, IdDefinition, IdArrayDeclaration;
+nonterminal Statements, Statement, MethodSignature, FunctionParameters;
+nonterminal Mulop, Addop, Relop;
+nonterminal IfStatement, DoWhile, Designator, DesignatorStatement, PrintStatement, ReturnStatement;
+nonterminal Matched, Unmatched;
+nonterminal Expression, Expressions, ActPars;
+nonterminal MethodChain, ArrayChain, Condition, ConditionTerm, ConditionFact;
+nonterminal AddTerm, Term, Factor, NewType, FunctionArgumentList, ConstDeclaration, VarDeclaration;
+nonterminal ConstDeclarationList, VarDeclarationList, IdDefinitionList, MethodSignatures, InterfaceBody, MethodList;
+nonterminal InterfaceElements, InterfaceElement, DesignatorTail, VarDeclarationListGlobal;
 
-nonterminal DesignatorStatement,Statement,Expr,Term,Factor,Designator,Addop,Mulop,Setop,ActPars
-nonterminal Condition,CondTerm
+precedence left ELSE;
+
+/* Grammar rules start here */
+start with Program;
+/* Helper rules */
+Literal       ::= CHAR_CONST | BOOL_CONST | NUMBER;
+IdDeclaration ::= IDENT ;
+IdArrayDeclaration ::= IDENT LSQBRACE RSQBRACE;
+IdDefinition  ::= IDENT EQUAL Literal;
+ClassBody ::= LBRACE VarDeclarations LBRACE MethodDeclarations RBRACE RBRACE; 
+Type ::= IDENT;
+Mulop ::= MUL | DIV | MOD;
+Addop ::= PLUS | MINUS;
+Relop ::= GT | LT | EQ | NEQ | GTE | LTE;
+
+/* Main rules */
+Program ::= PROG IDENT Declarations LBRACE MethodDeclarations RBRACE;
+
+Declarations ::= /* nothing */
+               | Declarations ConstDeclarationList
+               | Declarations VarDeclarationListGlobal
+               | Declarations ClassDeclaration
+               | Declarations InterfaceDeclaration
+               ;
+               
+               
+VarDeclarationListGlobal ::= VarDeclarationList 
+            | error SEMI:l 
+                {: parser.report_error("Oporavak od greske pri dodeli vrednosti na liniji " + lleft , null); :}
+            | error COMMA:l                                                                   
+                {: parser.report_error("Oporavak od greske pri dodeli vrednosti na liniji "+ lleft , null); :}
+            ;
+
+FunctionParameters ::= Type IdDeclaration
+					|  Type IdArrayDeclaration
+					|  FunctionParameters COMMA Type IdDeclaration
+					|  FunctionParameters COMMA Type IdArrayDeclaration
+					;
+FunctionArgumentList ::= /* nothing */ 
+                      | FunctionParameters
+                      ;
+
+MethodSignature ::= Type IDENT LPAREN FunctionArgumentList RPAREN
+                  | VOID IDENT LPAREN FunctionArgumentList RPAREN;
+
+MethodDeclaration ::= MethodSignature VarDeclarations LBRACE Statements RBRACE
+					| MethodSignature LBRACE Statements RBRACE
+                    ;
+
+MethodDeclarations ::= /* nothing */
+                     | MethodDeclarations MethodDeclaration
+                     ;
 
 
+                     
+ConstDeclarationList ::= CONST Type IdDefinitionList SEMI;
+
+IdDefinitionList ::= IdDefinition
+                   | IdDefinitionList COMMA IdDefinition;
+
+ConstDeclarations ::= ConstDeclarationList
+                    | ConstDeclarations ConstDeclarationList;
+                     
+
+VarDeclarations ::=   VarDeclarations VarDeclarationList
+					| VarDeclarationList
+					;
+
+VarDeclarationList ::= Type VarDeclaration SEMI;
+
+VarDeclaration ::=   IdDeclaration 
+				   | IdArrayDeclaration
+                   | VarDeclaration COMMA IdDeclaration 
+                   | VarDeclaration COMMA IdArrayDeclaration 
+                   ;
+
+ClassDeclaration ::=  CLASS IDENT ClassBody
+                    | CLASS IDENT EXTENDS Type ClassBody
+                    ;
+
+InterfaceDeclaration ::= INTERFACE IDENT LBRACE InterfaceBody RBRACE;
+
+
+InterfaceBody ::= InterfaceElements;
+
+InterfaceElements ::= /* nothing */
+                   | InterfaceElements InterfaceElement;
+
+InterfaceElement ::= MethodSignature SEMI
+                   | MethodDeclaration;
+
+Statements ::= /* nothing */
+			  | Statements Statement
+			  ;
+
+Statement ::= DesignatorStatement SEMI
+           | IfStatement
+           | BREAK SEMI
+           | CONTINUE SEMI
+           | ReturnStatement
+           | READ LPAREN Designator RPAREN SEMI
+           | PrintStatement
+           | DoWhile
+           | LBRACE Statements RBRACE
+		   | error SEMI:l {: parser.report_error("Oporavak od greske pri dodeli vrednostina liniji " +lleft,null); :}
+           ;
+
+ReturnStatement ::= RETURN SEMI
+				  | RETURN Expression SEMI
+				  ;           
+PrintStatement ::= PRINT LPAREN Expression RPAREN SEMI
+				|  PRINT LPAREN Expression COMMA NUMBER RPAREN SEMI
+				;
+				
+DoWhile ::=  DO Statement WHILE LPAREN Condition RPAREN SEMI
+		   | DO Statement WHILE LPAREN Condition COMMA DesignatorStatement RPAREN SEMI
+		   | DO Statement WHILE LPAREN RPAREN SEMI
+		   ;
+
+Condition ::= ConditionTerm
+			| Condition OR ConditionTerm
+			;
+			
+ConditionTerm ::= ConditionFact
+				| ConditionTerm AND ConditionFact
+				;
+
+ConditionFact ::= Expression
+				| Expression Relop Expression
+				;
+ 
+DesignatorStatement ::= Designator EQUAL Expression
+					  | Designator LPAREN ActPars RPAREN
+					  | Designator POSTINC
+					  | Designator POSTDEC
+					  | Designator EQUAL Designator UNION Designator
+					  ;
+
+Designator ::= IDENT DesignatorTail;
+
+DesignatorTail ::= /* nothing */
+                 | DOT IDENT DesignatorTail
+                 | LSQBRACE Expression RSQBRACE DesignatorTail;
+
+					  
+ActPars ::= /* nothing */
+		 | Expressions
+		 ;
+
+Expressions ::= Expression
+			 | Expressions COMMA Expression
+			 ;
+
+Expression ::= Designator MAP Designator
+			|  MINUS AddTerm 
+			|  AddTerm
+			;
+
+AddTerm ::= Term
+		|   AddTerm Addop Term	
+		;
+		
+Term ::= Factor
+	 |   Term Mulop Factor
+	 ;		
+
+Factor ::= Literal
+		|  LPAREN Expression RPAREN
+		|  NewType
+		|  Designator LPAREN ActPars RPAREN
+		|  Designator
+		;
+		
+NewType ::= NEW Type LSQBRACE Expression RSQBRACE
+		|   NEW Type LPAREN ActPars RPAREN
+		;
+
+IfStatement ::= IF LPAREN Condition RPAREN Statement
+              | IF LPAREN Condition RPAREN Statement ELSE Statement
+              ;

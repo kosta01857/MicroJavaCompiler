@@ -4,6 +4,8 @@
 		<delete>
 			<fileset dir="./src/com/kosta/pp1">
 				<exclude name="sym_old.java"/>
+				<exclude name="sym.java"/>
+				<exclude name="RuleVisitor.java"/>
 				<exclude name="utils/Log4JUtils.java"/>
 			</fileset>
 		</delete>
@@ -25,13 +27,13 @@
 	
 	<target name="generateParser" depends="clean">
 		<java jar="lib/cup_v10k.jar" fork="true">
-			<arg value="-h"/>	
 			<arg value="-destdir"/>	
 			<arg value="src/com/kosta/pp1"/>	
 			<arg value="-ast"/>	
 			<arg value="src.com.kosta.pp1.ast"/>	
 			<arg value="-parser"/>	
 			<arg value="MJParser"/>	
+			<arg value="-dump_states"/>	
 			<arg value="-buildtree"/>	
 			<arg value="spec/mjparser.cup"/>	
 		</java>
