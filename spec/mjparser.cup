@@ -123,8 +123,8 @@ MethodDeclarations ::= /* nothing */
                      
 ConstDeclarationList ::= (ConstDeclarationList) CONST Type:type IdDefinitionList SEMI;
 
-IdDefinitionList ::= (IdDefinitionListConcrete) IdDefinition:IdDefinition
-                   | IdDefinitionList COMMA IdDefinition;
+IdDefinitionList ::= (IdDefinitionListConcrete)  IdDefinition:IdDefinition
+                   | (IdDefinitionListRecursive) IdDefinitionList COMMA IdDefinition:IdDefinition;
 
 ConstDeclarations ::= ConstDeclarationList
                     | ConstDeclarations ConstDeclarationList;

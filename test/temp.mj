@@ -1,9 +1,9 @@
 program mj
    int a,b;
-   const int a = 'c';
+   const int a=5,b=6,c=7;
 {
 	int main(){
 		niz = new int(3,3);
-		b++;
+		a = 'c';
 	}
 }

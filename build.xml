@@ -23,7 +23,7 @@
 	
 	<target name="cleanLogs">
 		<delete>
-			<fileset dir="spec">
+			<fileset dir="logs">
 				<exclude name="mjlexer.lex"/>
 				<exclude name="mjparser.cup"/>
 			</fileset>
