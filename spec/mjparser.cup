@@ -48,37 +48,41 @@ terminal Character CHAR_CONST;
 terminal Boolean BOOL_CONST;
 terminal String IDENT;
 
-nonterminal Program, Declarations, MethodDeclarations;
+nonterminal Declarations, MethodDeclarations;
 nonterminal ConstDeclarations, VarDeclarations, ClassDeclaration, InterfaceDeclaration; 
 nonterminal MethodDeclaration;
-nonterminal Type, ClassBody, Literal, IdDeclaration, IdDefinition, IdArrayDeclaration;
+nonterminal ClassBody, Literal, IdDeclaration, IdDefinition, IdArrayDeclaration;
 nonterminal Statements, Statement, MethodSignature, FunctionParameters;
 nonterminal Mulop, Addop, Relop;
 nonterminal IfStatement, DoWhile, Designator, DesignatorStatement, PrintStatement, ReturnStatement;
 nonterminal Matched, Unmatched;
 nonterminal Expression, Expressions, ActPars;
 nonterminal MethodChain, ArrayChain, Condition, ConditionTerm, ConditionFact;
-nonterminal AddTerm, Term, Factor, NewType, FunctionArgumentList, ConstDeclaration, VarDeclaration;
-nonterminal ConstDeclarationList, VarDeclarationList, IdDefinitionList, MethodSignatures, InterfaceBody, MethodList;
+nonterminal AddTerm, Term, Factor, NewType, FunctionArgumentList, ConstDeclaration;
+nonterminal VarDeclarationList, MethodSignatures, InterfaceBody, MethodList;
 nonterminal InterfaceElements, InterfaceElement, DesignatorTail, VarDeclarationListGlobal;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName,Program;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct Type, VarDeclaration, IdDefinitionList, ConstDeclarationList;
 
 precedence left ELSE;
 
 /* Grammar rules start here */
 start with Program;
 /* Helper rules */
-Literal       ::= CHAR_CONST | BOOL_CONST | NUMBER;
-IdDeclaration ::= IDENT ;
-IdArrayDeclaration ::= IDENT LSQBRACE RSQBRACE;
-IdDefinition  ::= IDENT EQUAL Literal;
+Literal       ::=(CHAR) CHAR_CONST:val | (BOOL) BOOL_CONST:val | (NUMBER) NUMBER:val;
+IdDeclaration ::=(IdDeclaration) IDENT:name ;
+IdArrayDeclaration ::= (IdArrayDeclaration)IDENT:name LSQBRACE RSQBRACE;
+IdDefinition  ::=(IdDefinition) IDENT:name EQUAL Literal;
 ClassBody ::= LBRACE VarDeclarations LBRACE MethodDeclarations RBRACE RBRACE; 
-Type ::= IDENT;
+Type ::= (Type) IDENT:typeName;
 Mulop ::= MUL | DIV | MOD;
 Addop ::= PLUS | MINUS;
 Relop ::= GT | LT | EQ | NEQ | GTE | LTE;
 
 /* Main rules */
-Program ::= PROG IDENT Declarations LBRACE MethodDeclarations RBRACE;
+Program ::= (Program) PROG ProgName:p Declarations LBRACE MethodDeclarations RBRACE;
+
+ProgName ::= (ProgName) IDENT:name;
 
 Declarations ::= /* nothing */
                | Declarations ConstDeclarationList
@@ -117,9 +121,9 @@ MethodDeclarations ::= /* nothing */
 
 
                      
-ConstDeclarationList ::= CONST Type IdDefinitionList SEMI;
+ConstDeclarationList ::= (ConstDeclarationList) CONST Type:type IdDefinitionList SEMI;
 
-IdDefinitionList ::= IdDefinition
+IdDefinitionList ::= (IdDefinitionListConcrete) IdDefinition:IdDefinition
                    | IdDefinitionList COMMA IdDefinition;
 
 ConstDeclarations ::= ConstDeclarationList
@@ -130,10 +134,10 @@ VarDeclarations ::=   VarDeclarations VarDeclarationList
 					| VarDeclarationList
 					;
 
-VarDeclarationList ::= Type VarDeclaration SEMI;
+VarDeclarationList ::= (VarDeclarationList) Type:type VarDeclaration:VarDeclaration SEMI;
 
-VarDeclaration ::=   IdDeclaration 
-				   | IdArrayDeclaration
+VarDeclaration ::=   (VarDeclID)  IdDeclaration:IdDeclaration
+				   | (VarDeclARR) IdArrayDeclaration:IdArrayDeclaration
                    | VarDeclaration COMMA IdDeclaration 
                    | VarDeclaration COMMA IdArrayDeclaration 
                    ;

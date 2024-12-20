@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.Reader;
 
 import java_cup.runtime.Symbol;
+import java_cup.runtime.Scanner;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
@@ -37,7 +38,7 @@ public class MJParserTest {
 			MJParser p = new MJParser(lexer);
 
 	        Symbol s = p.parse();  //pocetak parsiranja
-	        
+								   //
 	        Program prog = (Program)(s.value); 
 			// ispis sintaksnog stabla
 			log.info(prog.toString(""));
