@@ -7,8 +7,10 @@
 				<exclude name="sym_old.java"/>
 				<exclude name="sym.java"/>
 				<exclude name="RuleVisitor.java"/>
-				<exclude name="SemanticAnalyzer.java"/>
+				<exclude name="SemanticAnalyzerV1.java"/>
+				<exclude name="SemanticAnalyzerV2.java"/>
 				<exclude name="utils/Log4JUtils.java"/>
+				<exclude name="utils/SemanticAnalyzerUtils.java"/>
 			</fileset>
 			<fileset dir="logs">
 			</fileset>

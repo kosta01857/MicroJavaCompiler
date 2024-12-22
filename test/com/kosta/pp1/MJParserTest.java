@@ -52,7 +52,7 @@ public class MJParserTest {
 			log.info("===================================");
 
 			// ispis prepoznatih programskih konstrukcija
-			VisitorAdaptor v = new SemanticAnalyzer();
+			VisitorAdaptor v = new SemanticAnalyzerV2();
 			prog.traverseBottomUp(v); 
 	      
 			//log.info(" Print count calls = " + v.printCallCount);

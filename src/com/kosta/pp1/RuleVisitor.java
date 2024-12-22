@@ -13,25 +13,25 @@ public class RuleVisitor extends VisitorAdaptor{
 	
 	Logger log = Logger.getLogger(getClass());
 	
-	@Override
-	public void visit(VarDeclarationDerived1 varDecl){
-		varDeclCount++;
-	}
+	//@Override
+	//public void visit(VarDeclRecursiveID varDecl){
+	//	varDeclCount++;
+	//}
 
-	public void visit(VarDeclarationDerived2 varDecl){
-		varDeclCount++;
-	}
-	
-	
+	//public void visit(VarDeclRecursiveARR varDecl){
+	//	varDeclCount++;
+	//}
+	//
+	//
 
-	public void visit(VarDeclID varDecl){
-		varDeclCount++;
-	}
+	//public void visit(VarDeclID varDecl){
+	//	varDeclCount++;
+	//}
 
-	public void visit(VarDeclARR varDecl){
+	//public void visit(VarDeclARR varDecl){
 
-		varDeclCount++;
-	}
+	//	varDeclCount++;
+	//}
 	
 
 	@Override

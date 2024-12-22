@@ -49,9 +49,9 @@ terminal Boolean BOOL_CONST;
 terminal String IDENT;
 
 nonterminal Declarations, MethodDeclarations;
-nonterminal ConstDeclarations, VarDeclarations, ClassDeclaration, InterfaceDeclaration; 
+nonterminal ConstDeclarations, LocalVarDeclarations, ClassDeclaration, InterfaceDeclaration; 
 nonterminal MethodDeclaration;
-nonterminal ClassBody, Literal, IdDeclaration, IdDefinition, IdArrayDeclaration;
+nonterminal ClassBody, Literal, IdDeclaration, IdDefinition, ArrayDeclaration;
 nonterminal Statements, Statement, MethodSignature, FunctionParameters;
 nonterminal Mulop, Addop, Relop;
 nonterminal IfStatement, DoWhile, Designator, DesignatorStatement, PrintStatement, ReturnStatement;
@@ -61,8 +61,8 @@ nonterminal MethodChain, ArrayChain, Condition, ConditionTerm, ConditionFact;
 nonterminal AddTerm, Term, Factor, NewType, FunctionArgumentList, ConstDeclaration;
 nonterminal VarDeclarationList, MethodSignatures, InterfaceBody, MethodList;
 nonterminal InterfaceElements, InterfaceElement, DesignatorTail, VarDeclarationListGlobal;
-nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName,Program;
-nonterminal rs.etf.pp1.symboltable.concepts.Struct Type, VarDeclaration, IdDefinitionList, ConstDeclarationList;
+nonterminal ProgName, Program;
+nonterminal Type, VarDeclaration, IdDefinitionList, ConstDeclarationList, IdentDecl;
 
 precedence left ELSE;
 
@@ -70,10 +70,11 @@ precedence left ELSE;
 start with Program;
 /* Helper rules */
 Literal       ::=(CHAR) CHAR_CONST:val | (BOOL) BOOL_CONST:val | (NUMBER) NUMBER:val;
-IdDeclaration ::=(IdDeclaration) IDENT:name ;
-IdArrayDeclaration ::= (IdArrayDeclaration)IDENT:name LSQBRACE RSQBRACE;
-IdDefinition  ::=(IdDefinition) IDENT:name EQUAL Literal;
-ClassBody ::= LBRACE VarDeclarations LBRACE MethodDeclarations RBRACE RBRACE; 
+IdDeclaration ::= (IdDecl) IdentDecl | (ArrayDecl)ArrayDeclaration;
+IdentDecl ::= (IdentDecl)IDENT:name;
+ArrayDeclaration ::= (ArrayDeclaration)IDENT:name LSQBRACE RSQBRACE;
+IdDefinition  ::=(IdDefinition) IDENT:name EQUAL Literal:val;
+ClassBody ::= LBRACE LocalVarDeclarations LBRACE MethodDeclarations RBRACE RBRACE; 
 Type ::= (Type) IDENT:typeName;
 Mulop ::= MUL | DIV | MOD;
 Addop ::= PLUS | MINUS;
@@ -92,7 +93,7 @@ Declarations ::= /* nothing */
                ;
                
                
-VarDeclarationListGlobal ::= VarDeclarationList 
+VarDeclarationListGlobal ::= (GlobalVarDeclaration) VarDeclarationList:DeclarationList
             | error SEMI:l 
                 {: parser.report_error("Oporavak od greske pri dodeli vrednosti na liniji " + lleft , null); :}
             | error COMMA:l                                                                   
@@ -100,19 +101,17 @@ VarDeclarationListGlobal ::= VarDeclarationList
             ;
 
 FunctionParameters ::= Type IdDeclaration
-					|  Type IdArrayDeclaration
 					|  FunctionParameters COMMA Type IdDeclaration
-					|  FunctionParameters COMMA Type IdArrayDeclaration
 					;
 FunctionArgumentList ::= /* nothing */ 
                       | FunctionParameters
                       ;
 
-MethodSignature ::= Type IDENT LPAREN FunctionArgumentList RPAREN
-                  | VOID IDENT LPAREN FunctionArgumentList RPAREN;
+MethodSignature ::=  (MethodSignatureTyped) Type:Type IDENT:MethodName LPAREN FunctionArgumentList RPAREN
+                  |  (MethodSignatureVoid)VOID IDENT:MethodName LPAREN FunctionArgumentList RPAREN;
 
-MethodDeclaration ::= MethodSignature VarDeclarations LBRACE Statements RBRACE
-					| MethodSignature LBRACE Statements RBRACE
+MethodDeclaration ::= (MethodDefinition)MethodSignature:MethodSignature LocalVarDeclarations:VarDecls LBRACE Statements RBRACE
+					| (Contract)MethodSignature:MethodSignature LBRACE Statements RBRACE
                     ;
 
 MethodDeclarations ::= /* nothing */
@@ -126,20 +125,15 @@ ConstDeclarationList ::= (ConstDeclarationList) CONST Type:type IdDefinitionList
 IdDefinitionList ::= (IdDefinitionListConcrete)  IdDefinition:IdDefinition
                    | (IdDefinitionListRecursive) IdDefinitionList COMMA IdDefinition:IdDefinition;
 
-ConstDeclarations ::= ConstDeclarationList
-                    | ConstDeclarations ConstDeclarationList;
-                     
 
-VarDeclarations ::=   VarDeclarations VarDeclarationList
-					| VarDeclarationList
-					;
+LocalVarDeclarations ::=   (LocalVarDeclarationsRecursive) LocalVarDeclarations:LocalVarDeclarations VarDeclarationList:declList
+						 | (LocalVarDeclarationsConcrete)VarDeclarationList:declList
+					     ;
 
 VarDeclarationList ::= (VarDeclarationList) Type:type VarDeclaration:VarDeclaration SEMI;
 
-VarDeclaration ::=   (VarDeclID)  IdDeclaration:IdDeclaration
-				   | (VarDeclARR) IdArrayDeclaration:IdArrayDeclaration
-                   | VarDeclaration COMMA IdDeclaration 
-                   | VarDeclaration COMMA IdArrayDeclaration 
+VarDeclaration ::=   (VarDecl)  IdDeclaration:IdDeclaration
+                   | (VarDeclRecursive)VarDeclaration:VarDeclaration COMMA IdDeclaration:IdDeclaration
                    ;
 
 ClassDeclaration ::=  CLASS IDENT ClassBody
@@ -197,14 +191,14 @@ ConditionFact ::= Expression
 				| Expression Relop Expression
 				;
  
-DesignatorStatement ::= Designator EQUAL Expression
+DesignatorStatement ::= (VarDesignation) Designator:Designator EQUAL Expression:Expr
 					  | Designator LPAREN ActPars RPAREN
 					  | Designator POSTINC
 					  | Designator POSTDEC
 					  | Designator EQUAL Designator UNION Designator
 					  ;
 
-Designator ::= IDENT DesignatorTail;
+Designator ::=(Designator) IDENT:name DesignatorTail:tail;
 
 DesignatorTail ::= /* nothing */
                  | DOT IDENT DesignatorTail
@@ -220,19 +214,19 @@ Expressions ::= Expression
 			 ;
 
 Expression ::= Designator MAP Designator
-			|  MINUS AddTerm 
-			|  AddTerm
+			|  (ExprMinusAddTerm) MINUS AddTerm 
+			|  (ExprAddTerm)AddTerm
 			;
 
-AddTerm ::= Term
-		|   AddTerm Addop Term	
+AddTerm ::= (AddTermConcrete) Term:Term
+		|   (AddTermRecursive) AddTerm:AddTerm Addop Term:Term	
 		;
 		
-Term ::= Factor
-	 |   Term Mulop Factor
+Term ::= (TermConcrete) Factor:Factor
+	 |   (TermRecursive) Term:Term Mulop Factor:Factor
 	 ;		
 
-Factor ::= Literal
+Factor ::= (FactorLiteral ) Literal:Literal
 		|  LPAREN Expression RPAREN
 		|  NewType
 		|  Designator LPAREN ActPars RPAREN
