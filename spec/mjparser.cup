@@ -120,7 +120,7 @@ MethodDeclarations ::= /* nothing */
 
 
                      
-ConstDeclarationList ::= (ConstDeclarationList) CONST Type:type IdDefinitionList SEMI;
+ConstDeclarationList ::= (ConstDeclarationList) CONST Type:type IdDefinitionList:defList SEMI;
 
 IdDefinitionList ::= (IdDefinitionListConcrete)  IdDefinition:IdDefinition
                    | (IdDefinitionListRecursive) IdDefinitionList COMMA IdDefinition:IdDefinition;
@@ -226,11 +226,11 @@ Term ::= (TermConcrete) Factor:Factor
 	 |   (TermRecursive) Term:Term Mulop Factor:Factor
 	 ;		
 
-Factor ::= (FactorLiteral ) Literal:Literal
+Factor ::= (FactorLiteral) Literal:Literal
 		|  LPAREN Expression RPAREN
-		|  NewType
+		|  (FactorNewType) NewType
 		|  Designator LPAREN ActPars RPAREN
-		|  Designator
+		|  (FactorIdent) Designator
 		;
 		
 NewType ::= NEW Type LSQBRACE Expression RSQBRACE

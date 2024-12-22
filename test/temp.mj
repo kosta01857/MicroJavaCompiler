@@ -1,8 +1,9 @@
 program mj
    char a,b[];
-   int d,g;
-   const int c=5,b=6;
+   bool d,g;
+   const int c=5,m=6;
 {
 	int main() int f,l;  {
+		g =  d;
 	}
 }

@@ -4,9 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.kosta.pp1.ast.ArrayDecl;
+import com.kosta.pp1.ast.ConstDeclarationList;
+import com.kosta.pp1.ast.Expression;
 import com.kosta.pp1.ast.GlobalVarDeclaration;
 import com.kosta.pp1.ast.IdDecl;
 import com.kosta.pp1.ast.IdDeclaration;
+import com.kosta.pp1.ast.IdDefinition;
+import com.kosta.pp1.ast.IdDefinitionList;
+import com.kosta.pp1.ast.IdDefinitionListConcrete;
+import com.kosta.pp1.ast.IdDefinitionListRecursive;
 import com.kosta.pp1.ast.LocalVarDeclarations;
 import com.kosta.pp1.ast.LocalVarDeclarationsConcrete;
 import com.kosta.pp1.ast.LocalVarDeclarationsRecursive;
@@ -17,6 +23,7 @@ import com.kosta.pp1.ast.VarDecl;
 import com.kosta.pp1.ast.VarDeclRecursive;
 import com.kosta.pp1.ast.VarDeclaration;
 import com.kosta.pp1.ast.VarDeclarationList;
+import com.kosta.pp1.ast.VarDesignation;
 import com.kosta.pp1.ast.VisitorAdaptor;
 import com.kosta.pp1.utils.SemanticAnalyzerUtils;
 
@@ -53,7 +60,7 @@ public class SemanticAnalyzerV2 extends VisitorAdaptor {
 				ArrayDecl arrDecl = (ArrayDecl)decl;
 				name = arrDecl.getArrayDeclaration().getName();
 				if(objExists(name)){
-					SemanticAnalyzerUtils.report_error("Variable with name " + name + " was already declared!", null);
+					SemanticAnalyzerUtils.report_error("Variable with name " + name + " was already declared!", decl);
 					return;
 				}
 				Struct arrStruct = new Struct(Struct.Array);
@@ -65,12 +72,12 @@ public class SemanticAnalyzerV2 extends VisitorAdaptor {
 				IdDecl idDecl = (IdDecl)decl;
 				name = idDecl.getIdentDecl().getName();
 				if(objExists(name)){
-					SemanticAnalyzerUtils.report_error("Variable with name " + name + " was already declared!", null);
+					SemanticAnalyzerUtils.report_error("Variable with name " + name + " was already declared!", decl);
 					return;
 				}
 				Tab.insert(Obj.Var,name,currentType);
 			}
-			SemanticAnalyzerUtils.report_info("Array Var Declaration " + name + " of type " + SemanticAnalyzerUtils.typeString(myType),decl); 
+			SemanticAnalyzerUtils.report_info("Var Declaration " + name + " of type " + SemanticAnalyzerUtils.typeString(myType),decl); 
 		}
 		static List<VarDeclarationList> findVarDeclarationLists(LocalVarDeclarations declarations){
 			List<VarDeclarationList> list = new ArrayList<>();
@@ -98,19 +105,43 @@ public class SemanticAnalyzerV2 extends VisitorAdaptor {
 			}
 			return Tab.noType;
 		}
+		static List<IdDefinition> findIdDefinitions(IdDefinitionList defList){
+			List<IdDefinition> list = new ArrayList<>();
+			while(defList instanceof IdDefinitionListRecursive){
+				IdDefinitionListRecursive defListR = (IdDefinitionListRecursive) defList;
+				list.add(defListR.getIdDefinition());
+				defList = defListR.getIdDefinitionList();
+			}
+			IdDefinitionListConcrete defListC = (IdDefinitionListConcrete)defList; 
+			list.add(defListC.getIdDefinition());
+			return list;
+		}
+		static void registerIdDefinition(IdDefinition def){
+			String name;
+			Struct myType = currentType;
+			name = def.getName();
+			if(objExists(name)){
+				SemanticAnalyzerUtils.report_error("Variable with name " + name + " was already defined!", def);
+				return;
+			}
+			if(!SemanticAnalyzerUtils.literalTypeCheck(def.getLiteral(),currentType)){
+				SemanticAnalyzerUtils.report_error("bad type assignment for constant " + name,def);
+				return;
+			}
+			Obj node = Tab.insert(Obj.Con,name,currentType);
+			node.setAdr(SemanticAnalyzerUtils.inferValueFromLiteral(def.getLiteral()));
+			SemanticAnalyzerUtils.report_info("Const Definition with name " + name + " of type " + SemanticAnalyzerUtils.typeString(myType) + " value is: " + node.getAdr(),def); 
+		}
 	}
-
 	public void visit(ProgName progName){
 		Tab.insert(Obj.Prog, progName.getName(), Tab.noType);
 		Tab.openScope();
 	}
-
 	public void visit(Program program){
 		Obj programNode = Tab.find(program.getProgName().getName());
 		Tab.chainLocalSymbols(programNode);
 		Tab.closeScope();
 	}
-
 	public void visit(GlobalVarDeclaration globalVarDeclaration){
 		VarDeclarationList varDeclarationList = globalVarDeclaration.getVarDeclarationList();
 		SemanticAnalyzerUtils.report_info("Global variables:", null);
@@ -126,5 +157,24 @@ public class SemanticAnalyzerV2 extends VisitorAdaptor {
 		SemanticAnalyzerUtils.report_info("Local variables:", null);
 		declLists.forEach(Utils::declarationListPass);
 	}
+	public void visit(ConstDeclarationList list){
+			Type type = list.getType();
+			Struct struct = Utils.inferType(type);
+			currentType = struct;
+			List<IdDefinition> defs = Utils.findIdDefinitions(list.getIdDefinitionList());
+			defs.forEach(Utils::registerIdDefinition);
+	}
+	public void visit(VarDesignation varDesignation){
+		Expression expr = varDesignation.getExpression();
+		String name = varDesignation.getDesignator().getName();
+		if(!Utils.objExists(name)){
+			SemanticAnalyzerUtils.report_error("use of undeclared identifier " + name,varDesignation);
+		}
+		Obj ident = Tab.find(name);
+		Struct type = ident.getType();
+		boolean error = SemanticAnalyzerUtils.ExprTypeCheck(expr,type);
+		SemanticAnalyzerUtils.reportUse(ident,varDesignation);
+	}
+
 }
 
