@@ -100,18 +100,18 @@ VarDeclarationListGlobal ::= (GlobalVarDeclaration) VarDeclarationList:Declarati
                 {: parser.report_error("Oporavak od greske pri dodeli vrednosti na liniji "+ lleft , null); :}
             ;
 
-FunctionParameters ::= Type IdDeclaration
-					|  FunctionParameters COMMA Type IdDeclaration
+FunctionParameters ::= (FunctionParameterDeclConcrete) Type IdDeclaration
+					|  (FunctionParameterDeclRecursive) FunctionParameters COMMA Type IdDeclaration
 					;
 FunctionArgumentList ::= /* nothing */ 
-                      | FunctionParameters
+                      | (FuncPars)FunctionParameters:FunctionParameters
                       ;
 
-MethodSignature ::=  (MethodSignatureTyped) Type:Type IDENT:MethodName LPAREN FunctionArgumentList RPAREN
-                  |  (MethodSignatureVoid)VOID IDENT:MethodName LPAREN FunctionArgumentList RPAREN;
+MethodSignature ::=  (MethodSignatureTyped) Type:Type IDENT:MethodName LPAREN FunctionArgumentList:FunctionArgumentList RPAREN
+                  |  (MethodSignatureVoid)VOID IDENT:MethodName LPAREN FunctionArgumentList:FunctionArgumentList RPAREN;
 
 MethodDeclaration ::= (MethodDefinition)MethodSignature:MethodSignature LocalVarDeclarations:VarDecls LBRACE Statements RBRACE
-					| (Contract)MethodSignature:MethodSignature LBRACE Statements RBRACE
+					| (MethodDefinitionNoLocals)MethodSignature:MethodSignature LBRACE Statements RBRACE
                     ;
 
 MethodDeclarations ::= /* nothing */
@@ -152,17 +152,17 @@ InterfaceElement ::= MethodSignature SEMI
                    | MethodDeclaration;
 
 Statements ::= /* nothing */
-			  | Statements Statement
+			  | (StatementsRecursive)Statements:Statements Statement:Statement
 			  ;
 
-Statement ::= DesignatorStatement SEMI
-           | IfStatement
+Statement ::= (DesignatorStmt)DesignatorStatement SEMI
+           | (IfStmt)IfStatement 
            | BREAK SEMI
            | CONTINUE SEMI
            | ReturnStatement
            | READ LPAREN Designator RPAREN SEMI
            | PrintStatement
-           | DoWhile
+           | (WhileStmt)DoWhile
            | LBRACE Statements RBRACE
 		   | error SEMI:l {: parser.report_error("Oporavak od greske pri dodeli vrednostina liniji " +lleft,null); :}
            ;
@@ -174,13 +174,13 @@ PrintStatement ::= PRINT LPAREN Expression RPAREN SEMI
 				|  PRINT LPAREN Expression COMMA NUMBER RPAREN SEMI
 				;
 				
-DoWhile ::=  DO Statement WHILE LPAREN Condition RPAREN SEMI
-		   | DO Statement WHILE LPAREN Condition COMMA DesignatorStatement RPAREN SEMI
-		   | DO Statement WHILE LPAREN RPAREN SEMI
+DoWhile ::=  (WhileCond) DO Statement WHILE LPAREN Condition RPAREN SEMI
+		   | (WhileDesignator) DO Statement WHILE LPAREN Condition COMMA DesignatorStatement RPAREN SEMI
+		   | (WhileSimple) DO Statement WHILE LPAREN RPAREN SEMI
 		   ;
 
-Condition ::= ConditionTerm
-			| Condition OR ConditionTerm
+Condition ::= (ConditionConcrete)  ConditionTerm
+			| (ConditionRecursive) Condition OR ConditionTerm
 			;
 			
 ConditionTerm ::= ConditionFact
@@ -193,9 +193,9 @@ ConditionFact ::= Expression
  
 DesignatorStatement ::= (VarDesignation) Designator:Designator EQUAL Expression:Expr
 					  | Designator LPAREN ActPars RPAREN
-					  | Designator POSTINC
-					  | Designator POSTDEC
-					  | Designator EQUAL Designator UNION Designator
+					  | (PostInc)Designator:Designator POSTINC
+					  | (PostDec)Designator:Designator POSTDEC
+					  | (SetDesignation)Designator:DesignatorLeft EQUAL Designator:Operand1 UNION Designator:Operand2
 					  ;
 
 Designator ::=(Designator) IDENT:name DesignatorTail:tail;
@@ -237,6 +237,6 @@ NewType ::= NEW Type LSQBRACE Expression RSQBRACE
 		|   NEW Type LPAREN ActPars RPAREN
 		;
 
-IfStatement ::= IF LPAREN Condition RPAREN Statement
-              | IF LPAREN Condition RPAREN Statement ELSE Statement
+IfStatement ::= (IfOnly) IF LPAREN Condition RPAREN Statement
+              | (IfElse) IF LPAREN Condition RPAREN Statement ELSE Statement
               ;

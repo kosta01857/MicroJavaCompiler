@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import com.kosta.pp1.SetType;
 import com.kosta.pp1.ast.AddTerm;
 import com.kosta.pp1.ast.AddTermConcrete;
 import com.kosta.pp1.ast.AddTermRecursive;
@@ -87,6 +88,9 @@ public class SemanticAnalyzerUtils {
 	}
 
 	static public String typeString(Struct type){
+		if (type instanceof SetType){
+			return "Set";
+		}
 		int typeInt = type.getKind();
 		//report_info("type int is "+typeInt, null);
 		switch (typeInt) {
@@ -111,80 +115,90 @@ public class SemanticAnalyzerUtils {
 	static public void reportUse(Obj object,SyntaxNode node){
 		String name = object.getName();
 		switch(object.getKind()){
-			case 0: {report_info("use of constant variable "+name + " of type " + typeString(object.getType()),node); break;}
+			case 0: {report_info("use of constant variable "+name + " of type " + typeString(object.getType()) + " level:" + object.getLevel(),node); break;}
 			case 1: {report_info("use of variable "+name + " of type " + typeString(object.getType()),node); break;}
 			case 3: {report_info("use of method "+name,node); break;}
 
 		}
 	}
+
+	static public boolean analyzeFactors(List<Factor> factors,Struct type){
+		boolean error = false;
+		int cnt = 0;
+		for(Factor t : factors){
+			cnt++;
+			if(t instanceof FactorIdent){
+				FactorIdent factorI = (FactorIdent)t; 
+				String name = factorI.getDesignator().getName();
+				Obj obj = Tab.find(name);
+				reportUse(obj,factorI);
+				if(obj.getType().isRefType() && cnt > 1){
+					report_error("cannot use type of "+typeString(obj.getType()), factorI);
+					return true;
+				}
+				if(obj == Tab.noObj){
+					report_error("use of undeclared identifier "+name, factorI);
+					return true;
+				}
+				if(!obj.getType().assignableTo(type)){
+					report_error("cannot assign type of "+typeString(obj.getType()), factorI);
+					return true;
+				}
+			}
+			else if(t instanceof FactorLiteral){
+				FactorLiteral factL = (FactorLiteral)t;
+				Literal literal = factL.getLiteral();
+				if(literal instanceof BOOL || literal instanceof CHAR){
+					error = true;
+					break;
+				}
+				if (!literalTypeCheck(literal, type)){
+					error = true;
+					break;
+				}
+			}
+		}
+		return error;
+	}
+
+	static public void packFactors(Term term,List<Factor> factors){
+		while(term instanceof TermRecursive){
+			TermRecursive termRecursive = (TermRecursive)term;
+			Factor factor = termRecursive.getFactor();
+			if(factor instanceof FactorLiteral || factor instanceof FactorIdent){
+					factors.add(factor);
+			}
+			term = termRecursive.getTerm();
+		}
+		TermConcrete termConcrete = (TermConcrete) term;
+		Factor factor = termConcrete.getFactor();
+		if(factor instanceof FactorLiteral || factor instanceof FactorIdent){
+			factors.add(factor);
+		}
+	}
+	static public boolean AddExprTypeCheck(AddTerm addTerm,List<Factor> factors,Struct type){
+		boolean error = false;
+		while(addTerm instanceof AddTermRecursive){
+			AddTermRecursive addTermRecursive = (AddTermRecursive)addTerm;
+			Term term = addTermRecursive.getTerm();
+			packFactors(term,factors);
+			addTerm = addTermRecursive.getAddTerm();
+		}
+		AddTermConcrete addTermConcrete = (AddTermConcrete)addTerm;
+		Term term = addTermConcrete.getTerm();
+		packFactors(term,factors);
+		error = analyzeFactors(factors,type);
+		if(error) report_error("expression is of incorrect type", null);
+		return error;
+	}
+
 	static public boolean ExprTypeCheck(Expression expr,Struct type){
 		boolean error = false;
 		List<Factor> factors = new ArrayList<>();
 		if (expr instanceof ExprAddTerm){
 			ExprAddTerm exprAddTerm = (ExprAddTerm)expr;
 			AddTerm addTerm = exprAddTerm.getAddTerm();
-			while(addTerm instanceof AddTermRecursive){
-				AddTermRecursive addTermRecursive = (AddTermRecursive)addTerm;
-				Term term = addTermRecursive.getTerm();
-				while(term instanceof TermRecursive){
-					TermRecursive termRecursive = (TermRecursive)term;
-					Factor factor = termRecursive.getFactor();
-				if(factor instanceof FactorLiteral || factor instanceof FactorIdent){
-						factors.add(factor);
-				}
-					term = termRecursive.getTerm();
-				}
-				TermConcrete termConcrete = (TermConcrete) term;
-				Factor factor = termConcrete.getFactor();
-				if(factor instanceof FactorLiteral || factor instanceof FactorIdent){
-					factors.add(factor);
-				}
-				addTerm = addTermRecursive.getAddTerm();
-			}
-			AddTermConcrete addTermConcrete = (AddTermConcrete)addTerm;
-			Term term = addTermConcrete.getTerm();
-			while(term instanceof TermRecursive){
-				TermRecursive termRecursive = (TermRecursive)term;
-				Factor factor = termRecursive.getFactor();
-				if(factor instanceof FactorLiteral || factor instanceof FactorIdent){
-					factors.add(factor);
-				}
-				term = termRecursive.getTerm();
-			}
-			TermConcrete termConcrete = (TermConcrete) term;
-			Factor factor = termConcrete.getFactor();
-				if(factor instanceof FactorLiteral || factor instanceof FactorIdent){
-					factors.add(factor);
-			}
-			for(Factor t : factors){
-				if(t instanceof FactorIdent){
-					FactorIdent factorI = (FactorIdent)t; 
-					String name = factorI.getDesignator().getName();
-					Obj obj = Tab.find(name);
-					reportUse(obj,factorI);
-					if(obj == Tab.noObj){
-						report_error("use of undeclared identifier "+name, factorI);
-						return true;
-					}
-					if(!obj.getType().assignableTo(type)){
-						report_error("cannot assign type of "+typeString(obj.getType()), factorI);
-						return true;
-					}
-				}
-				else if(t instanceof FactorLiteral){
-					FactorLiteral factL = (FactorLiteral)t;
-					Literal literal = factL.getLiteral();
-					if(literal instanceof BOOL){
-						error = true;
-						break;
-					}
-					if (!literalTypeCheck(literal, type)){
-						error = true;
-						break;
-					}
-				}
-			}
-			if(error) report_error("expression is of incorrect type", null);
+			error = AddExprTypeCheck(addTerm,factors,type);
 		}
 		return error;
 	}

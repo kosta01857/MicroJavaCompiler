@@ -45,7 +45,8 @@ public class MJParserTest {
 			Tab.init();
 			Struct bool = new Struct(Struct.Bool);
 			Tab.currentScope.addToLocals(new Obj(Obj.Type, "bool", bool));
-
+			Struct set = new SetType();
+			Tab.currentScope.addToLocals(new Obj(Obj.Type, "set", set));
 	        Program prog = (Program)(s.value); 
 			// ispis sintaksnog stabla
 			log.info(prog.toString(""));
