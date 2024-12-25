@@ -6,6 +6,9 @@ program mj
 	char a(int a) int aaa;bool bo[]; {
 		do{a++;break;} while(a);
 	}
-	void main(){}
-	int foo(int a){}
+	int foo(int a){aaa--;}
+	void main(){
+		aaa++;
+		foo(200%5);
+	}
 }

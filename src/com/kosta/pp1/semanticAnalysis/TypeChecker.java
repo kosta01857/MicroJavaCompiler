@@ -115,6 +115,6 @@ public class TypeChecker{
 			error = MapExprTypeCheck(mapExpr);
 
 		}
-		return error;
+		return !error;
 	}
 }

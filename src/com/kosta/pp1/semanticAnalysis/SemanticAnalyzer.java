@@ -39,11 +39,11 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	public void visit(Program program) {
 		Obj programNode = Tab.find(program.getProgName().getName());
 		Tab.chainLocalSymbols(programNode);
-		Tab.closeScope();
 		Boolean found = Finder.findMainFunction();
 		if(!found){
 			Utils.report_error("main function that matches requirements not found!",null);
 		}
+		Tab.closeScope();
 	}
 
 	public void visit(GlobalVarDeclarationList globalVarDeclaration) {
@@ -56,7 +56,12 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		Analyzer.definitionListPass(list);
 	}
 	public void visit(MethodDefinitionNoLocals def) {
-		Register.registerMethod(def.getMethodSignature());
+		MethodSignature signature = def.getMethodSignature();
+		Statements statements = def.getStatements();
+		Obj funcObj = Register.registerMethod(signature);
+		Tab.chainLocalSymbols(funcObj);
+		Analyzer.statementsPass(statements);
+		Tab.closeScope();
 	}
 
 	public void visit(MethodDefinition methodDefinition) {

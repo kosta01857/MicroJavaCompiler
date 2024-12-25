@@ -31,6 +31,10 @@ import com.kosta.pp1.ast.FunctionParameterDeclRecursive;
 import com.kosta.pp1.ast.AddTerm;
 import com.kosta.pp1.ast.AddTermConcrete;
 import com.kosta.pp1.ast.AddTermRecursive;
+import com.kosta.pp1.ast.Expression;
+import com.kosta.pp1.ast.Expressions;
+import com.kosta.pp1.ast.ExpressionsConcrete;
+import com.kosta.pp1.ast.ExpressionsRecursive;
 import com.kosta.pp1.ast.Factor;
 import com.kosta.pp1.ast.FactorIdent;
 import com.kosta.pp1.ast.FactorLiteral;
@@ -40,7 +44,7 @@ import com.kosta.pp1.ast.MethodDeclarations;
 import com.kosta.pp1.ast.MethodDeclarationsRecursive;
 
 public class Finder {
-	static List<Statement> findStatements(Statements statements){
+	static List<Statement> findStatements(Statements statements) {
 		List<Statement> list = new ArrayList<>();
 		while (statements instanceof StatementsRecursive) {
 			StatementsRecursive statementsR = (StatementsRecursive) statements;
@@ -50,6 +54,7 @@ public class Finder {
 		}
 		return list;
 	}
+
 	static List<IdDeclaration> findIdDeclarations(VarDeclaration varDeclarations) {
 		List<IdDeclaration> list = new ArrayList<>();
 		while (varDeclarations instanceof VarDeclRecursive) {
@@ -65,6 +70,7 @@ public class Finder {
 		list.add(idDecl);
 		return list;
 	}
+
 	static List<VarDeclarationList> findVarDeclarationLists(LocalVarDeclarations declarations) {
 		List<VarDeclarationList> list = new ArrayList<>();
 		while (declarations instanceof LocalVarDeclarationsRecursive) {
@@ -76,6 +82,7 @@ public class Finder {
 		list.add(decls.getVarDeclarationList());
 		return list;
 	}
+
 	static List<IdDefinition> findIdDefinitions(IdDefinitionList defList) {
 		List<IdDefinition> list = new ArrayList<>();
 		while (defList instanceof IdDefinitionListRecursive) {
@@ -87,6 +94,7 @@ public class Finder {
 		list.add(defListC.getIdDefinition());
 		return list;
 	}
+
 	static List<IdDeclaration> findFunctionParameters(FunctionParameters parameters) {
 		List<IdDeclaration> list = new ArrayList<>();
 		while (parameters instanceof FunctionParameterDeclRecursive) {
@@ -102,6 +110,7 @@ public class Finder {
 		list.add(idDecl);
 		return list;
 	}
+
 	static List<Term> findTerms(AddTerm term) {
 		List<Term> terms = new ArrayList<>();
 		while (term instanceof AddTermRecursive) {
@@ -113,6 +122,7 @@ public class Finder {
 		terms.add(termR.getTerm());
 		return terms;
 	}
+
 	static List<Factor> findFactors(Term term) {
 		List<Factor> factors = new ArrayList<>();
 		while (term instanceof TermRecursive) {
@@ -130,22 +140,35 @@ public class Finder {
 		}
 		return factors;
 	}
-	static boolean findMainFunction(){
+
+	static List<Expression> findExpressions(Expressions expressions) {
+		List<Expression> expr = new ArrayList<>();
+		while (expressions instanceof ExpressionsRecursive) {
+			ExpressionsRecursive exprR = (ExpressionsRecursive) expressions;
+			expr.add(exprR.getExpression());
+			expressions = exprR.getExpressions();
+		}
+		ExpressionsConcrete exprC = (ExpressionsConcrete) expressions;
+		expr.add(exprC.getExpression());
+		return expr;
+	}
+
+	static boolean findMainFunction() {
 		Obj main = Tab.find("main");
-		if(main == Tab.noObj){
-			Utils.report_error("No function called main found",null);
+		if (main == Tab.noObj) {
+			Utils.report_error("No function called main found", null);
 			return false;
 		}
-		if(main.getKind() != Obj.Meth){
-			Utils.report_error("No function called main found",null);
+		if (main.getKind() != Obj.Meth) {
+			Utils.report_error("No function called main found", null);
 			return false;
 		}
 		Boolean mainCheck;
 		mainCheck = main.getType().getKind() == Struct.None;
-		mainCheck &= main.getLevel() == 0; 
-		if(!mainCheck){
-			Utils.report_info(""+main.getLevel() + " |"+main.getType().getKind(),null);
-			Utils.report_error("main found, but signature doesnt match the required one",null);
+		mainCheck &= main.getLevel() == 0;
+		if (!mainCheck) {
+			Utils.report_info("" + main.getLevel() + " |" + main.getType().getKind(), null);
+			Utils.report_error("main found, but signature doesnt match the required one", null);
 			return false;
 		}
 		return true;

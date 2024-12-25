@@ -139,7 +139,7 @@ public class Utils{
 		switch(object.getKind()){
 			case 0: {report_info("use of constant variable "+name + " of type " + typeString(object.getType()) + " level: " + object.getLevel(),node); break;}
 			case 1: {report_info("use of variable "+name + " of type " + typeString(object.getType()) + " level: " + object.getLevel(),node); break;}
-			case 3: {report_info("use of method "+name + " of return type " + typeString(object.getType()) + " number of args: " + object.getLevel(),node); break;}
+			case 3: {report_info("function call of name "+name + " of return type " + typeString(object.getType()) + " number of args: " + object.getLevel(),node); break;}
 		}
 	}
 	static public void reportDeclaration(Obj object,SyntaxNode node){

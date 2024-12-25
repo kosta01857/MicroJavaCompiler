@@ -1,5 +1,7 @@
 package com.kosta.pp1.semanticAnalysis;
 
+import com.kosta.pp1.ast.ActPars;
+import com.kosta.pp1.ast.ActParsConcrete;
 import com.kosta.pp1.ast.Break;
 import com.kosta.pp1.ast.Condition;
 import com.kosta.pp1.ast.ConstDeclarationList;
@@ -9,6 +11,7 @@ import com.kosta.pp1.ast.DesignatorStatement;
 import com.kosta.pp1.ast.DesignatorStmt;
 import com.kosta.pp1.ast.DoWhile;
 import com.kosta.pp1.ast.Expression;
+import com.kosta.pp1.ast.FunctionCall;
 import com.kosta.pp1.ast.VarDeclarationList;
 import com.kosta.pp1.ast.VarDesignation;
 import com.kosta.pp1.ast.WhileCond;
@@ -35,6 +38,7 @@ import com.kosta.pp1.ast.Type;
 
 public class Analyzer {
 	static boolean inDoWhile = false;
+	static Obj currentFunction = null;
 
 	static void varDesignationPass(VarDesignation varDesignation) {
 		Expression expr = varDesignation.getExpression();
@@ -44,6 +48,14 @@ public class Analyzer {
 		}
 		Obj ident = Tab.find(name);
 		Struct type = ident.getType();
+		Boolean typeCheck;
+		typeCheck = ident.getKind() == Obj.Var;
+		typeCheck |= ident.getKind() == Obj.Fld;
+		typeCheck |= ident.getKind() == Obj.Elem;
+		if (!typeCheck) {
+			Utils.report_error("Designator cannot be of type " + Utils.typeString(type), varDesignation);
+			return;
+		}
 		boolean error = TypeChecker.ExprTypeCheck(expr, type);
 		Utils.reportUse(ident, varDesignation);
 	}
@@ -51,6 +63,10 @@ public class Analyzer {
 	static void declarationListPass(VarDeclarationList list) {
 		Type type = list.getType();
 		Struct struct = Utils.inferType(type);
+		if (struct == Tab.noType) {
+			Utils.report_error("Type of name " + type.getTypeName() + " doesnt exist", list);
+			return;
+		}
 		SemanticAnalyzer.currentType = struct;
 		List<IdDeclaration> idDecls = Finder.findIdDeclarations(list.getVarDeclaration());
 		idDecls.forEach(Register::registerIdDeclaration);
@@ -59,6 +75,10 @@ public class Analyzer {
 	static void definitionListPass(ConstDeclarationList list) {
 		Type type = list.getType();
 		Struct struct = Utils.inferType(type);
+		if (struct == Tab.noType) {
+			Utils.report_error("Type of name " + type.getTypeName() + " doesnt exist", list);
+			return;
+		}
 		SemanticAnalyzer.currentType = struct;
 		List<IdDefinition> idDecls = Finder.findIdDefinitions(list.getIdDefinitionList());
 		idDecls.forEach(Register::registerIdDefinition);
@@ -123,12 +143,54 @@ public class Analyzer {
 			varDesignationPass((VarDesignation) dStatement);
 		} else if (dStatement instanceof SetDesignation) {
 			setDesignationPass((SetDesignation) dStatement);
+		} else if (dStatement instanceof FunctionCall){
+			functionCallPass((FunctionCall)dStatement);
+		}
+	}
+
+	static void functionCallPass(FunctionCall call){
+		Designator d = call.getDesignator();
+		String name = d.getName();
+		if(!Utils.objExists(name)){
+			Utils.report_error("call of undeclared function "+name,call);
+			return;
+		}
+		currentFunction = Tab.find(name);
+		boolean funcCheck;
+		if (currentFunction.getKind() != Obj.Meth){
+			Utils.report_error("Designator " + name  + " is not a function!",call);
+			return;
+		}
+		Utils.reportUse(currentFunction,call);
+		actParsPass(call.getActPars());
+	}
+
+	static void actParsPass(ActPars actPars){
+		List<Struct> args = Register.functionTypeMap.get(currentFunction);
+		if(actPars instanceof ActParsConcrete){
+			ActParsConcrete actParamsC = (ActParsConcrete) actPars;
+			List<Expression> expressions = Finder.findExpressions(actParamsC.getExpressions());
+			if(args.size() != expressions.size()){
+				Utils.report_error("Call of function " + currentFunction.getName() + " does not match its signature",actPars);
+				return;
+			}
+			for(int i = 0;i < expressions.size();i++){
+				Expression exp = expressions.get(i);
+				Struct argType = args.get(i);
+				if(!TypeChecker.ExprTypeCheck(exp,argType)){
+					Utils.report_error("Call of function " + currentFunction.getName() + " does not match its signature",actPars);
+					return;
+				}
+			}
+		}
+		else if (args.size() > 0){
+			Utils.report_error("Call of function " + currentFunction.getName() + " does not match its signature",actPars);
 		}
 	}
 
 	static void statementPass(Statement statement) {
-		if (statement instanceof StatementBlock){
-			StatementBlock stmtBlk = (StatementBlock)statement;
+		if (statement instanceof StatementBlock) {
+			StatementBlock stmtBlk = (StatementBlock) statement;
 			statementsPass(stmtBlk.getStatements());
 		}
 		if (statement instanceof DesignatorStmt) {
@@ -158,6 +220,7 @@ public class Analyzer {
 	static void conditionPass(Condition cond) {
 
 	}
+
 	static void postDecPass(PostDec postDecExpr) {
 		Designator d = postDecExpr.getDesignator();
 		String name = d.getName();
@@ -166,7 +229,11 @@ public class Analyzer {
 		if (node == Tab.noObj) {
 			Utils.report_error("use of undeclared identifier " + name, postDecExpr);
 		}
-		if (node.getKind() != Obj.Var) {
+		Boolean badObj;
+		badObj = !(node.getKind() == Obj.Var);
+		badObj &= !(node.getKind() == Obj.Elem);
+		badObj &= !(node.getKind() == Obj.Fld);
+		if (badObj) {
 			Utils.report_error("cannot use identifier " + name + " in this context", postDecExpr);
 		}
 		Struct type = node.getType();

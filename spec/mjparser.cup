@@ -193,7 +193,7 @@ ConditionFact ::= Expression
 				;
  
 DesignatorStatement ::= (VarDesignation) Designator:Designator EQUAL Expression:Expr
-					  | Designator LPAREN ActPars RPAREN
+					  | (FunctionCall)Designator LPAREN ActPars RPAREN
 					  | (PostInc)Designator:Designator POSTINC
 					  | (PostDec)Designator:Designator POSTDEC
 					  | (SetDesignation)Designator:DesignatorLeft EQUAL Designator:Operand1 UNION Designator:Operand2
@@ -207,11 +207,11 @@ DesignatorTail ::= /* nothing */
 
 					  
 ActPars ::= /* nothing */
-		 | Expressions
+		 | (ActParsConcrete)Expressions
 		 ;
 
-Expressions ::= Expression
-			 | Expressions COMMA Expression
+Expressions ::= (ExpressionsConcrete)Expression
+			 |  (ExpressionsRecursive)Expressions COMMA Expression
 			 ;
 
 Expression ::= (MapExpr)Designator MAP Designator
