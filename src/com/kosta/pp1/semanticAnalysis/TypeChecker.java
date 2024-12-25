@@ -21,7 +21,7 @@ import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Struct;
 
 public class TypeChecker{
-	static public boolean analyzeFactors(List<Factor> factors, Struct type, boolean minus) {
+	static public boolean analyzeAddFactors(List<Factor> factors, Struct type, boolean minus) {
 		boolean error = false;
 		int cnt = 0;
 		for (Factor t : factors) {
@@ -59,7 +59,6 @@ public class TypeChecker{
 		}
 		return error;
 	}
-
 	static public boolean AddExprTypeCheck(AddTerm addTerm, Struct type, boolean minus) {
 		boolean error = false;
 		List<Term> terms = Finder.findTerms(addTerm);
@@ -67,12 +66,11 @@ public class TypeChecker{
 		for (Term t : terms) {
 			factors.addAll(Finder.findFactors(t));
 		}
-		error = analyzeFactors(factors, type, minus);
+		error = analyzeAddFactors(factors, type, minus);
 		if (error)
 			Utils.report_error("expression is of incorrect type", addTerm);
 		return error;
 	}
-
 	static public boolean MapExprTypeCheck(MapExpr mapExpr){
 		boolean error = false;
 		Designator d1 = mapExpr.getDesignator();
@@ -101,7 +99,6 @@ public class TypeChecker{
 		} 	
 		return error;
 	}
-
 	static public boolean ExprTypeCheck(Expression expr, Struct type) {
 		boolean error = false;
 		if (expr instanceof ExprAddTerm) {

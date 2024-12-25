@@ -1,7 +1,11 @@
 program mj
 	int aaa;
+	int array[];
+	bool c;
 {
-	char a(int a,char b) int aaa;bool bo[]; {
-		do a++; while(a);
+	char a(int a) int aaa;bool bo[]; {
+		do{a++;break;} while(a);
 	}
+	void main(){}
+	int foo(int a){}
 }

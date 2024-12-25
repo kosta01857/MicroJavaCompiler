@@ -1,7 +1,9 @@
 package com.kosta.pp1.semanticAnalysis;
 
+import com.kosta.pp1.ast.Break;
 import com.kosta.pp1.ast.Condition;
 import com.kosta.pp1.ast.ConstDeclarationList;
+import com.kosta.pp1.ast.Continue;
 import com.kosta.pp1.ast.Designator;
 import com.kosta.pp1.ast.DesignatorStatement;
 import com.kosta.pp1.ast.DesignatorStmt;
@@ -13,12 +15,10 @@ import com.kosta.pp1.ast.WhileCond;
 import com.kosta.pp1.ast.WhileDesignator;
 import com.kosta.pp1.ast.WhileSimple;
 import com.kosta.pp1.ast.WhileStmt;
-
 import rs.etf.pp1.symboltable.Tab;
 import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Struct;
 import java.util.List;
-import java.util.ArrayList;
 import com.kosta.pp1.ast.IdDeclaration;
 import com.kosta.pp1.ast.IdDefinition;
 import com.kosta.pp1.ast.IfElse;
@@ -29,11 +29,13 @@ import com.kosta.pp1.ast.PostDec;
 import com.kosta.pp1.ast.PostInc;
 import com.kosta.pp1.ast.SetDesignation;
 import com.kosta.pp1.ast.Statement;
+import com.kosta.pp1.ast.StatementBlock;
 import com.kosta.pp1.ast.Statements;
-import com.kosta.pp1.ast.StatementsRecursive;
 import com.kosta.pp1.ast.Type;
 
 public class Analyzer {
+	static boolean inDoWhile = false;
+
 	static void varDesignationPass(VarDesignation varDesignation) {
 		Expression expr = varDesignation.getExpression();
 		String name = varDesignation.getDesignator().getName();
@@ -125,6 +127,10 @@ public class Analyzer {
 	}
 
 	static void statementPass(Statement statement) {
+		if (statement instanceof StatementBlock){
+			StatementBlock stmtBlk = (StatementBlock)statement;
+			statementsPass(stmtBlk.getStatements());
+		}
 		if (statement instanceof DesignatorStmt) {
 			DesignatorStmt stmt = (DesignatorStmt) statement;
 			DesignatorStatement dStatement = stmt.getDesignatorStatement();
@@ -133,25 +139,25 @@ public class Analyzer {
 			whilePass((WhileStmt) statement);
 		} else if (statement instanceof IfStmt) {
 			ifPass((IfStmt) statement);
-		} //else if (statement instanceof Break)
-
+		} else if (statement instanceof Break) {
+			if (!inDoWhile) {
+				Utils.report_error("cannot use break outside do while loop", statement);
+			}
+		} else if (statement instanceof Continue) {
+			if (!inDoWhile) {
+				Utils.report_error("cannot use continue outside do while loop", statement);
+			}
+		}
 	}
 
 	static void statementsPass(Statements statements) {
-		List<Statement> list = new ArrayList<>();
-		while (statements instanceof StatementsRecursive) {
-			StatementsRecursive statementsR = (StatementsRecursive) statements;
-			Statement statement = statementsR.getStatement();
-			list.add(statement);
-			statements = statementsR.getStatements();
-		}
+		List<Statement> list = Finder.findStatements(statements);
 		list.forEach(Analyzer::statementPass);
 	}
 
 	static void conditionPass(Condition cond) {
-		
-	}
 
+	}
 	static void postDecPass(PostDec postDecExpr) {
 		Designator d = postDecExpr.getDesignator();
 		String name = d.getName();
@@ -190,18 +196,20 @@ public class Analyzer {
 
 	static void whilePass(WhileStmt stmt) {
 		DoWhile doWhile = stmt.getDoWhile();
+		inDoWhile = true;
 		if (doWhile instanceof WhileCond) {
 			WhileCond whileCond = (WhileCond) doWhile;
 			conditionPass(whileCond.getCondition());
-			statementPass(whileCond.getStatement());
+			statementsPass(whileCond.getStatements());
 		} else if (doWhile instanceof WhileSimple) {
 			WhileSimple whileSimple = (WhileSimple) doWhile;
-			statementPass(whileSimple.getStatement());
+			statementsPass(whileSimple.getStatements());
 		} else if (doWhile instanceof WhileDesignator) {
 			WhileDesignator whileDesignator = (WhileDesignator) doWhile;
-			statementPass(whileDesignator.getStatement());
+			statementsPass(whileDesignator.getStatements());
 			conditionPass(whileDesignator.getCondition());
 			designatorStatementPass(whileDesignator.getDesignatorStatement());
 		}
+		inDoWhile = false;
 	}
 }

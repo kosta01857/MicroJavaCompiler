@@ -11,8 +11,8 @@
 				<exclude name="semanticAnalysis/Utils.java"/>
 				<exclude name="semanticAnalysis/SetType.java"/>
 				<exclude name="semanticAnalysis/Analyzer.java"/>
+				<exclude name="semanticAnalysis/TypeChecker.java"/>
 				<exclude name="utils/Log4JUtils.java"/>
-				<exclude name="utils/SemanticAnalyzerUtils.java"/>
 				<exclude name="utils/myDumpSymbolTableVisitor.java"/>
 			</fileset>
 			<fileset dir="logs">

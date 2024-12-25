@@ -99,7 +99,6 @@ protected StringBuilder output = new StringBuilder();
 			break;
 		case Struct.Array:
 			output.append("Arr of ");
-			
 			switch (structToVisit.getElemType().getKind()) {
 			case Struct.None:
 				output.append("notype");
@@ -109,6 +108,9 @@ protected StringBuilder output = new StringBuilder();
 				break;
 			case Struct.Char:
 				output.append("char");
+				break;
+			case Struct.Bool:
+				output.append("bool");
 				break;
 			case Struct.Class:
 				output.append("Class");

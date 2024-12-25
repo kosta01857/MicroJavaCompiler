@@ -11,15 +11,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import com.kosta.pp1.ast.ArrayDecl;
 import com.kosta.pp1.ast.FuncPars;
 import com.kosta.pp1.ast.IdDecl;
 import rs.etf.pp1.symboltable.Tab;
 import com.kosta.pp1.ast.MethodSignature;
 import com.kosta.pp1.ast.FunctionArgumentList;
-import com.kosta.pp1.ast.FunctionParameterDeclRecursive;
-import com.kosta.pp1.ast.FunctionParameterDeclConcrete;
 import com.kosta.pp1.ast.FunctionParameters;
 import com.kosta.pp1.ast.MethodSignatureTyped;
 import com.kosta.pp1.ast.MethodSignatureVoid;
@@ -28,7 +25,46 @@ import com.kosta.pp1.ast.VarDeclarationList;
 
 public class Register {
 	static Map<Obj, List<Struct>> functionTypeMap = new HashMap<>();
+	static List<Struct> inBuiltFuncGetArgTypes(String func){
+		List<Struct> type = new ArrayList<>();
+		switch(func){
+			case "chr":{
+				type.add(Tab.find("int").getType());
+				break;
+			}
+			case "ord":{
+				type.add(Tab.find("char").getType());
+				break;
+			}
+			case "len":{
+				type.add(Tab.find("arr").getType());
+				break;
+			}
+			case "add":{
+				type.add(Tab.find("set").getType());
+				type.add(Tab.find("int").getType());
+				break;
+			}
+			case "addAll":{
+				type.add(Tab.find("set").getType());
+				Struct arrType = new Struct(Struct.Array);
+				arrType.setElementType(Tab.find("int").getType());
+				type.add(arrType);
+				break;
+			}
 
+				
+			
+		}
+		return type;
+	}
+	static {
+		String[] inBuiltFuncs = {"chr","ord","len","add","addAll"};
+		for(String func:inBuiltFuncs){
+			Obj o = Tab.find(func);
+			functionTypeMap.put(o,inBuiltFuncGetArgTypes(func));
+		}
+	}
 	static Obj registerIdDeclaration(IdDeclaration decl) {
 		String name;
 		Obj ret;
@@ -56,7 +92,6 @@ public class Register {
 		Utils.reportDeclaration(ret, decl);
 		return ret;
 	}
-
 	static Obj registerMethod(MethodSignature s) {
 		String name;
 		Struct sType;
@@ -80,7 +115,6 @@ public class Register {
 		Utils.reportDeclaration(funcObj, s);
 		return funcObj;
 	}
-
 	static void registerIdDefinition(IdDefinition def) {
 		String name;
 		name = def.getName();
@@ -97,23 +131,22 @@ public class Register {
 		node.setAdr(Utils.getValueFromLiteral(def.getLiteral()));
 		Utils.reportDeclaration(node, def);
 	}
-
 	static void registerFunctionParameters(FunctionArgumentList funcArgs, Obj funcNode) {
 		List<Struct> typeList = new ArrayList<>();
+		List<IdDeclaration> idDecls = new ArrayList<>();
 		functionTypeMap.put(funcNode, typeList);
 		if (funcArgs instanceof FuncPars) {
 			int paramCount = 1;
 			FuncPars funcPars = (FuncPars) funcArgs;
 			FunctionParameters parameters = funcPars.getFunctionParameters();
-			List<IdDeclaration> idDecls = Finder.findFunctionParameters(parameters);
+			idDecls = Finder.findFunctionParameters(parameters);
 			idDecls.forEach(idDecl -> {
 				Register.registerIdDeclaration(idDecl);
 				typeList.add(idDecl.struct);
 			});
-			funcNode.setLevel(idDecls.size());
 		}
+		funcNode.setLevel(idDecls.size());
 	}
-
 	static void registerLocalVariables(LocalVarDeclarations localVarDeclaration) {
 		List<VarDeclarationList> declLists = Finder.findVarDeclarationLists(localVarDeclaration);
 		Utils.report_info("Local variables:", null);

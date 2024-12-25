@@ -116,7 +116,7 @@ MethodDeclaration ::= (MethodDefinition)MethodSignature:MethodSignature LocalVar
                     ;
 
 MethodDeclarations ::= /* nothing */
-                     | MethodDeclarations MethodDeclaration
+                     | (MethodDeclarationsRecursive)MethodDeclarations MethodDeclaration
                      ;
 
 
@@ -156,15 +156,15 @@ Statements ::= /* nothing */
 			  | (StatementsRecursive)Statements:Statements Statement:Statement
 			  ;
 
-Statement ::= (DesignatorStmt)DesignatorStatement SEMI
+Statement ::=(DesignatorStmt)DesignatorStatement SEMI
            | (IfStmt)IfStatement 
-           | BREAK SEMI
-           | CONTINUE SEMI
+           | (Break)BREAK SEMI
+           | (Continue)CONTINUE SEMI
            | ReturnStatement
            | READ LPAREN Designator RPAREN SEMI
            | PrintStatement
            | (WhileStmt)DoWhile
-           | LBRACE Statements RBRACE
+           | (StatementBlock) LBRACE Statements RBRACE
 		   | error SEMI:l {: parser.report_error("Oporavak od greske pri dodeli vrednostina liniji " +lleft,null); :}
            ;
 
@@ -175,9 +175,9 @@ PrintStatement ::= PRINT LPAREN Expression RPAREN SEMI
 				|  PRINT LPAREN Expression COMMA NUMBER RPAREN SEMI
 				;
 				
-DoWhile ::=  (WhileCond) DO Statement WHILE LPAREN Condition RPAREN SEMI
-		   | (WhileDesignator) DO Statement WHILE LPAREN Condition COMMA DesignatorStatement RPAREN SEMI
-		   | (WhileSimple) DO Statement WHILE LPAREN RPAREN SEMI
+DoWhile ::=  (WhileCond) DO Statements WHILE LPAREN Condition RPAREN SEMI
+		   | (WhileDesignator) DO Statements WHILE LPAREN Condition COMMA DesignatorStatement RPAREN SEMI
+		   | (WhileSimple) DO Statements WHILE LPAREN RPAREN SEMI
 		   ;
 
 Condition ::= (ConditionConcrete)  ConditionTerm
@@ -214,7 +214,7 @@ Expressions ::= Expression
 			 | Expressions COMMA Expression
 			 ;
 
-Expression ::= Designator MAP Designator
+Expression ::= (MapExpr)Designator MAP Designator
 			|  (ExprMinusAddTerm) MINUS AddTerm 
 			|  (ExprAddTerm)AddTerm
 			;
