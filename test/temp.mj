@@ -1,5 +1,7 @@
 program mj
 	int aaa;
 {
-	char a(bool b,int aaa) int ab;bool bo; {}
+	char a(int a,char b) int aaa;bool bo[]; {
+		do a++; while(a);
+	}
 }

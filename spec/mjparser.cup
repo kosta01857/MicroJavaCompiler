@@ -51,7 +51,7 @@ terminal String IDENT;
 nonterminal Declarations, MethodDeclarations;
 nonterminal ConstDeclarations, LocalVarDeclarations, ClassDeclaration, InterfaceDeclaration; 
 nonterminal MethodDeclaration;
-nonterminal ClassBody, Literal, IdDeclaration, IdDefinition, ArrayDeclaration;
+nonterminal ClassBody, Literal, IdDefinition, ArrayDeclaration;
 nonterminal Statements, Statement, MethodSignature, FunctionParameters;
 nonterminal Mulop, Addop, Relop;
 nonterminal IfStatement, DoWhile, Designator, DesignatorStatement, PrintStatement, ReturnStatement;
@@ -63,6 +63,7 @@ nonterminal VarDeclarationList, MethodSignatures, InterfaceBody, MethodList;
 nonterminal InterfaceElements, InterfaceElement, DesignatorTail, VarDeclarationListGlobal;
 nonterminal ProgName, Program;
 nonterminal Type, VarDeclaration, IdDefinitionList, ConstDeclarationList, IdentDecl;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct IdDeclaration;
 
 precedence left ELSE;
 
@@ -93,7 +94,7 @@ Declarations ::= /* nothing */
                ;
                
                
-VarDeclarationListGlobal ::= (GlobalVarDeclaration) VarDeclarationList:DeclarationList
+VarDeclarationListGlobal ::= (GlobalVarDeclarationList) VarDeclarationList:DeclarationList
             | error SEMI:l 
                 {: parser.report_error("Oporavak od greske pri dodeli vrednosti na liniji " + lleft , null); :}
             | error COMMA:l                                                                   

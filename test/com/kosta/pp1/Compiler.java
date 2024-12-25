@@ -2,25 +2,21 @@ package com.kosta.pp1;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 
 import java_cup.runtime.Symbol;
 import rs.etf.pp1.symboltable.Tab;
-import rs.etf.pp1.symboltable.concepts.Obj;
-import rs.etf.pp1.symboltable.concepts.Struct;
-import java_cup.runtime.Scanner;
-
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
-
 import com.kosta.pp1.ast.Program;
 import com.kosta.pp1.ast.VisitorAdaptor;
+import com.kosta.pp1.semanticAnalysis.SemanticAnalyzer;
 import com.kosta.pp1.utils.Log4JUtils;
+import com.kosta.pp1.utils.myDumpSymbolTableVisitor;
 
-public class MJParserTest {
+public class Compiler{
 
 	static {
 		DOMConfigurator.configure(Log4JUtils.instance().findLoggerConfigFile());
@@ -29,7 +25,7 @@ public class MJParserTest {
 	
 	public static void main(String[] args) throws Exception {
 		
-		Logger log = Logger.getLogger(MJParserTest.class);
+		Logger log = Logger.getLogger(Compiler.class);
 		
 		Reader br = null;
 		try {
@@ -43,18 +39,15 @@ public class MJParserTest {
 
 	        Symbol s = p.parse();  //pocetak parsiranja
 			Tab.init();
-			Struct bool = new Struct(Struct.Bool);
-			Tab.currentScope.addToLocals(new Obj(Obj.Type, "bool", bool));
-			Struct set = new SetType();
-			Tab.currentScope.addToLocals(new Obj(Obj.Type, "set", set));
 	        Program prog = (Program)(s.value); 
 			// ispis sintaksnog stabla
 			log.info(prog.toString(""));
 			log.info("===================================");
 
 			// ispis prepoznatih programskih konstrukcija
-			VisitorAdaptor v = new SemanticAnalyzerV2();
+			VisitorAdaptor v = new SemanticAnalyzer();
 			prog.traverseBottomUp(v); 
+			//Tab.dump(new myDumpSymbolTableVisitor());
 	      
 			//log.info(" Print count calls = " + v.printCallCount);
 

@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import com.kosta.pp1.SetType;
+import com.kosta.pp1.semanticAnalysis.SetType;
 import com.kosta.pp1.ast.AddTerm;
 import com.kosta.pp1.ast.AddTermConcrete;
 import com.kosta.pp1.ast.AddTermRecursive;
@@ -23,105 +23,13 @@ import com.kosta.pp1.ast.SyntaxNode;
 import com.kosta.pp1.ast.Term;
 import com.kosta.pp1.ast.TermConcrete;
 import com.kosta.pp1.ast.TermRecursive;
+import com.kosta.pp1.semanticAnalysis.Utils;
 
 import rs.etf.pp1.symboltable.Tab;
 import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Struct;
 
 public class SemanticAnalyzerUtils {
-	static Logger log = Logger.getLogger(SemanticAnalyzerUtils.class);
-	public static boolean literalTypeCheck(Literal literal,Struct type){
-		if(literal instanceof CHAR){
-			if (type.getKind() != Struct.Char){
-				report_error("BAD TYPE", null);
-				return false;
-			}
-		}
-		if(literal instanceof NUMBER){
-			if (type.getKind() != Struct.Int){
-				report_error("BAD TYPE", null);
-				return false;
-			}
-		}
-		if(literal instanceof BOOL){
-			if (type.getKind() != Struct.Bool){
-				report_error("BAD TYPE", null);
-				return false;
-			}
-		}
-		return true;
-	}
-	
-	public static int inferValueFromLiteral(Literal literal){
-		if(literal instanceof CHAR){
-			CHAR c = (CHAR)literal;
-			return (int) c.getVal();
-			
-		}
-		if(literal instanceof NUMBER){
-			NUMBER num = (NUMBER)literal;
-			return num.getVal();
-		}
-		if(literal instanceof BOOL){
-			BOOL b = (BOOL)literal;
-			Boolean bool = b.getVal();
-			if(bool) return 1;
-			else return 0;
-		}
-		return -1;
-	}
-	
-	static public void report_error(String message, SyntaxNode info) {
-		StringBuilder msg = new StringBuilder(message);
-		int line = (info == null) ? 0: info.getLine();
-		if (line != 0)
-			msg.append (" at line").append(line);
-		log.error(msg.toString());
-	}
-	
-	static public void report_info(String message, SyntaxNode info) {
-		StringBuilder msg = new StringBuilder(message);
-		int line = (info == null) ? 0: info.getLine();
-		if (line != 0)
-			msg.append (" at line").append(line);
-		log.info(msg.toString());
-	}
-
-	static public String typeString(Struct type){
-		if (type instanceof SetType){
-			return "Set";
-		}
-		int typeInt = type.getKind();
-		//report_info("type int is "+typeInt, null);
-		switch (typeInt) {
-			case 1:
-				return "Integer";
-			case 2:
-				return "Character";
-			case 5: return "Boolean";
-			case 3: {
-						StringBuilder sb = new StringBuilder();
-						sb.append("Array of ");
-						sb.append(typeString(type.getElemType()));
-						sb.append("s");
-						return sb.toString();
-
-			}
-			default:
-				return "";
-		}
-	}
-
-	static public void reportUse(Obj object,SyntaxNode node){
-		String name = object.getName();
-		switch(object.getKind()){
-			case 0: {report_info("use of constant variable "+name + " of type " + typeString(object.getType()) + " level:" + object.getLevel(),node); break;}
-			case 1: {report_info("use of variable "+name + " of type " + typeString(object.getType()),node); break;}
-			case 3: {report_info("use of method "+name,node); break;}
-
-		}
-	}
-
 	static public boolean analyzeFactors(List<Factor> factors,Struct type){
 		boolean error = false;
 		int cnt = 0;
@@ -131,17 +39,17 @@ public class SemanticAnalyzerUtils {
 				FactorIdent factorI = (FactorIdent)t; 
 				String name = factorI.getDesignator().getName();
 				Obj obj = Tab.find(name);
-				reportUse(obj,factorI);
+				Utils.reportUse(obj,factorI);
 				if(obj.getType().isRefType() && cnt > 1){
-					report_error("cannot use type of "+typeString(obj.getType()), factorI);
+					Utils.report_error("cannot use type of "+Utils.typeString(obj.getType()), factorI);
 					return true;
 				}
 				if(obj == Tab.noObj){
-					report_error("use of undeclared identifier "+name, factorI);
+					Utils.report_error("use of undeclared identifier "+name, factorI);
 					return true;
 				}
 				if(!obj.getType().assignableTo(type)){
-					report_error("cannot assign type of "+typeString(obj.getType()), factorI);
+					Utils.report_error("cannot assign type of "+Utils.typeString(obj.getType()), factorI);
 					return true;
 				}
 			}
@@ -152,7 +60,7 @@ public class SemanticAnalyzerUtils {
 					error = true;
 					break;
 				}
-				if (!literalTypeCheck(literal, type)){
+				if (!Utils.literalTypeCheck(literal, type)){
 					error = true;
 					break;
 				}
@@ -160,7 +68,6 @@ public class SemanticAnalyzerUtils {
 		}
 		return error;
 	}
-
 	static public void packFactors(Term term,List<Factor> factors){
 		while(term instanceof TermRecursive){
 			TermRecursive termRecursive = (TermRecursive)term;
@@ -188,10 +95,9 @@ public class SemanticAnalyzerUtils {
 		Term term = addTermConcrete.getTerm();
 		packFactors(term,factors);
 		error = analyzeFactors(factors,type);
-		if(error) report_error("expression is of incorrect type", null);
+		if(error) Utils.report_error("expression is of incorrect type", null);
 		return error;
 	}
-
 	static public boolean ExprTypeCheck(Expression expr,Struct type){
 		boolean error = false;
 		List<Factor> factors = new ArrayList<>();
