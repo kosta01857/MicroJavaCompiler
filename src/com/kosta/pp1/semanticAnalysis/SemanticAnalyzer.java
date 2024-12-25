@@ -63,7 +63,6 @@ import com.kosta.pp1.ast.WhileCond;
 import com.kosta.pp1.ast.WhileDesignator;
 import com.kosta.pp1.ast.WhileSimple;
 import com.kosta.pp1.ast.WhileStmt;
-import com.kosta.pp1.utils.SemanticAnalyzerUtils;
 
 import rs.etf.pp1.symboltable.Tab;
 import rs.etf.pp1.symboltable.concepts.Obj;
@@ -72,36 +71,41 @@ import rs.etf.pp1.symboltable.concepts.Struct;
 public class SemanticAnalyzer extends VisitorAdaptor {
 	static Struct currentType = Tab.noType;
 
-	public SemanticAnalyzer(){
+	public SemanticAnalyzer() {
 		Struct bool = new Struct(Struct.Bool);
 		Obj boolObj = new Obj(Obj.Type, "bool", bool);
-		
+
 		Tab.currentScope.addToLocals(boolObj);
 		Struct set = new SetType();
 		Tab.currentScope.addToLocals(new Obj(Obj.Type, "set", set));
 	}
 
-	public void visit(ProgName progName){
+	public void visit(ProgName progName) {
 		Tab.insert(Obj.Prog, progName.getName(), Tab.noType);
 		Tab.openScope();
 	}
-	public void visit(Program program){
+
+	public void visit(Program program) {
 		Obj programNode = Tab.find(program.getProgName().getName());
 		Tab.chainLocalSymbols(programNode);
 		Tab.closeScope();
 	}
-	public void visit(GlobalVarDeclarationList globalVarDeclaration){
+
+	public void visit(GlobalVarDeclarationList globalVarDeclaration) {
 		VarDeclarationList varDeclarationList = globalVarDeclaration.getVarDeclarationList();
 		Utils.report_info("Global variables:", null);
 		Analyzer.declarationListPass(varDeclarationList);
 	}
-	public void visit(ConstDeclarationList list){
+
+	public void visit(ConstDeclarationList list) {
 		Analyzer.definitionListPass(list);
 	}
-	public void visit(MethodDefinitionNoLocals def){
+
+	public void visit(MethodDefinitionNoLocals def) {
 		Register.registerMethod(def.getMethodSignature());
 	}
-	public void visit(MethodDefinition methodDefinition){
+
+	public void visit(MethodDefinition methodDefinition) {
 		MethodSignature signature = methodDefinition.getMethodSignature();
 		LocalVarDeclarations varDecls = methodDefinition.getLocalVarDeclarations();
 		Statements statements = methodDefinition.getStatements();
@@ -110,7 +114,6 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		Tab.chainLocalSymbols(funcObj);
 		Analyzer.statementsPass(statements);
 		Tab.closeScope();
-		//Tab.dump();
+		// Tab.dump();
 	}
 }
-

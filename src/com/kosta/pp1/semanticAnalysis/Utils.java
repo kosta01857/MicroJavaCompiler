@@ -95,7 +95,7 @@ public class Utils{
 		StringBuilder msg = new StringBuilder(message);
 		int line = (info == null) ? 0: info.getLine();
 		if (line != 0)
-			msg.append (" at line").append(line);
+			msg.append (" at line ").append(line);
 		log.error(msg.toString());
 	}
 	
@@ -103,7 +103,7 @@ public class Utils{
 		StringBuilder msg = new StringBuilder(message);
 		int line = (info == null) ? 0: info.getLine();
 		if (line != 0)
-			msg.append (" at line").append(line);
+			msg.append (" at line ").append(line);
 		log.info(msg.toString());
 	}
 	/** Converts Type to String
