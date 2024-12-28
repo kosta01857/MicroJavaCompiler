@@ -1,6 +1,7 @@
 package com.kosta.pp1.semanticAnalysis;
 
 import com.kosta.pp1.ast.Break;
+import com.kosta.pp1.ast.ClassBody;
 import com.kosta.pp1.ast.Condition;
 import com.kosta.pp1.ast.ConstDeclarationList;
 import com.kosta.pp1.ast.Continue;
@@ -26,6 +27,12 @@ import com.kosta.pp1.ast.IfElse;
 import com.kosta.pp1.ast.IfOnly;
 import com.kosta.pp1.ast.IfStatement;
 import com.kosta.pp1.ast.IfStmt;
+import com.kosta.pp1.ast.LocalVarDeclarations;
+import com.kosta.pp1.ast.MethodDeclaration;
+import com.kosta.pp1.ast.MethodDeclarations;
+import com.kosta.pp1.ast.MethodDefinition;
+import com.kosta.pp1.ast.MethodDefinitionNoLocals;
+import com.kosta.pp1.ast.MethodSignature;
 import com.kosta.pp1.ast.PostDec;
 import com.kosta.pp1.ast.PostInc;
 import com.kosta.pp1.ast.ReturnStatement;
@@ -244,6 +251,40 @@ public class Analyzer {
 		}
 	}
 
+	static void methodDeclarationPass(MethodDeclaration decl){
+		if (decl instanceof MethodDefinitionNoLocals){
+			MethodDefinitionNoLocals methodDef = (MethodDefinitionNoLocals)decl;
+			MethodSignature signature = methodDef.getMethodSignature();
+			Statements statements = methodDef.getStatements();
+			Obj funcObj = Register.registerMethod(signature);
+			Tab.chainLocalSymbols(funcObj);
+			Analyzer.currentFunction = funcObj;
+			Analyzer.returnFound = false;
+			Analyzer.statementsPass(statements);
+			if(funcObj.getType().getKind() != Struct.None && !Analyzer.returnFound){
+				Utils.report_error("function "+funcObj.getName() + " must have a return statement",methodDef);
+			}
+			Tab.closeScope();
+			}
+		else{
+			MethodDefinition methodDefinition = (MethodDefinition)decl;
+			MethodSignature signature = methodDefinition.getMethodSignature();
+			LocalVarDeclarations varDecls = methodDefinition.getLocalVarDeclarations();
+			Statements statements = methodDefinition.getStatements();
+			Obj funcObj = Register.registerMethod(signature);
+			Register.registerLocalVariables(varDecls);
+			Tab.chainLocalSymbols(funcObj);
+			Analyzer.currentFunction = funcObj;
+			Analyzer.returnFound = false;
+			Analyzer.statementsPass(statements);
+			if(funcObj.getType().getKind() != Struct.None && !Analyzer.returnFound){
+				Utils.report_error("function "+funcObj.getName() + " must have a return statement",methodDefinition);
+			}
+			Tab.closeScope();
+			// Tab.dump();
+		}
+	}
+
 	static void ifPass(IfStmt stmt) {
 		IfStatement statement = stmt.getIfStatement();
 		if (statement instanceof IfOnly) {
@@ -280,5 +321,16 @@ public class Analyzer {
 			designatorStatementPass(whileDesignator.getDesignatorStatement());
 		}
 		inDoWhile = false;
+	}
+	
+	static void classBodyPass(ClassBody body){
+		Register.inClass = true;
+		MethodDeclarations methodDecls = body.getMethodDeclarations();
+		LocalVarDeclarations localVarDecls = body.getLocalVarDeclarations();
+		List<VarDeclarationList> varDeclLists = Finder.findVarDeclarationLists(localVarDecls);
+		List<MethodDeclaration> methodDeclList = Finder.findMethodDeclarations(methodDecls);
+		methodDeclList.forEach(Analyzer::methodDeclarationPass);
+		varDeclLists.forEach(Analyzer::declarationListPass);
+		Register.inClass = false;
 	}
 }

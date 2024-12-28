@@ -75,7 +75,7 @@ IdDeclaration ::= (IdDecl) IdentDecl | (ArrayDecl)ArrayDeclaration;
 IdentDecl ::= (IdentDecl)IDENT:name;
 ArrayDeclaration ::= (ArrayDeclaration)IDENT:name LSQBRACE RSQBRACE;
 IdDefinition  ::=(IdDefinition) IDENT:name EQUAL Literal:val;
-ClassBody ::= LBRACE LocalVarDeclarations LBRACE MethodDeclarations RBRACE RBRACE; 
+ClassBody ::= (ClassBody)LBRACE LocalVarDeclarations:LocalVarDeclarations LBRACE MethodDeclarations:MethodDeclarations RBRACE RBRACE; 
 Type ::= (Type) IDENT:typeName;
 Mulop ::= MUL | DIV | MOD;
 Addop ::= PLUS | MINUS;
@@ -137,8 +137,8 @@ VarDeclaration ::=   (VarDecl)  IdDeclaration:IdDeclaration
                    | (VarDeclRecursive)VarDeclaration:VarDeclaration COMMA IdDeclaration:IdDeclaration
                    ;
 
-ClassDeclaration ::=  CLASS IDENT ClassBody
-                    | CLASS IDENT EXTENDS Type ClassBody
+ClassDeclaration ::=  (ClassDeclarationNoExtend)CLASS IDENT:Name ClassBody
+                    | (ClassDeclarationExtend)CLASS IDENT:Name EXTENDS Type:ExtendType ClassBody
                     ;
 
 InterfaceDeclaration ::= INTERFACE IDENT LBRACE InterfaceBody RBRACE;
@@ -202,8 +202,8 @@ DesignatorStatement ::= (VarDesignation) Designator:Designator EQUAL Expression:
 Designator ::=(Designator) IDENT:name DesignatorTail:tail;
 
 DesignatorTail ::= /* nothing */
-                 | (MethodCall) DOT IDENT DesignatorTail
-                 | (ArrayAccess)LSQBRACE Expression RSQBRACE DesignatorTail;
+                 | (MethodCall) DOT IDENT:ident DesignatorTail:Tail
+                 | (ArrayAccess)LSQBRACE Expression:expr RSQBRACE DesignatorTail:Tail;
 
 					  
 ActPars ::= /* nothing */

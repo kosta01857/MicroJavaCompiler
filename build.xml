@@ -5,15 +5,8 @@
 		<delete>
 			<fileset dir="./src/com/kosta/pp1">
 				<exclude name="RuleVisitor.java"/>
-				<exclude name="semanticAnalysis/SemanticAnalyzer.java"/>
-				<exclude name="semanticAnalysis/Finder.java"/>
-				<exclude name="semanticAnalysis/Register.java"/>
-				<exclude name="semanticAnalysis/Utils.java"/>
-				<exclude name="semanticAnalysis/SetType.java"/>
-				<exclude name="semanticAnalysis/Analyzer.java"/>
-				<exclude name="semanticAnalysis/TypeChecker.java"/>
-				<exclude name="utils/Log4JUtils.java"/>
-				<exclude name="utils/myDumpSymbolTableVisitor.java"/>
+				<exclude name="semanticAnalysis/**"/>
+				<exclude name="utils/**"/>
 			</fileset>
 			<fileset dir="logs">
 			</fileset>

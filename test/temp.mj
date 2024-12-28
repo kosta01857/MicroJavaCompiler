@@ -1,9 +1,15 @@
 program mj
 	bool c;
+	int b;
+	class Test{
+		int a;
+	};
 {
-	void main() int aaa[];{
+	void main() int aaa[];Test test;{
 		aaa = new int[5];
+		b = aaa[3];
 		c = true;
+		b = test.a;
 		return;
 	}
 }

@@ -20,7 +20,7 @@ class FactorNewTypeAnalyzer implements FactorAnalyzer{
 		// Cannot have more than 1 factor of this type in an Expr
 		if (cnt > 1) return true;
 		NewType newType = factN.getNewType();
-		if (newType instanceof NewClass){
+		if (newType instanceof NewArray){
 			return analyzeNewArray((NewArray)newType,type);
 		}
 		else{
@@ -34,10 +34,10 @@ class FactorNewTypeAnalyzer implements FactorAnalyzer{
 		Type T = newArr.getType();
 		Struct type = Utils.inferType(T);
 		Expression expr = newArr.getExpression();
-		typeCheck = type.compatibleWith(leftSideType);
 		Obj intObj = Tab.find("int");
 		typeCheck = TypeChecker.ExprTypeCheck(expr,intObj.getType());
-		typeCheck &= type.compatibleWith(leftSideType);
+		typeCheck &= leftSideType.isRefType();
+		typeCheck &= type.compatibleWith(leftSideType.getElemType());
 		return !typeCheck;
 	}
 

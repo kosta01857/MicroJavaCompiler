@@ -16,6 +16,10 @@ import rs.etf.pp1.symboltable.concepts.Struct;
 import com.kosta.pp1.ast.LocalVarDeclarations;
 import com.kosta.pp1.ast.LocalVarDeclarationsConcrete;
 import com.kosta.pp1.ast.LocalVarDeclarationsRecursive;
+import com.kosta.pp1.ast.MethodDeclaration;
+import com.kosta.pp1.ast.MethodDeclarations;
+import com.kosta.pp1.ast.MethodDeclarationsRecursive;
+import com.kosta.pp1.ast.MethodDefinition;
 import com.kosta.pp1.ast.Statement;
 import com.kosta.pp1.ast.Statements;
 import com.kosta.pp1.ast.StatementsRecursive;
@@ -35,8 +39,6 @@ import com.kosta.pp1.ast.Expressions;
 import com.kosta.pp1.ast.ExpressionsConcrete;
 import com.kosta.pp1.ast.ExpressionsRecursive;
 import com.kosta.pp1.ast.Factor;
-import com.kosta.pp1.ast.FactorIdent;
-import com.kosta.pp1.ast.FactorLiteral;
 import com.kosta.pp1.ast.FunctionParameterDeclConcrete;
 
 public class Finder {
@@ -164,5 +166,15 @@ public class Finder {
 			return false;
 		}
 		return true;
+	}
+
+	static List<MethodDeclaration> findMethodDeclarations(MethodDeclarations decls){
+		List<MethodDeclaration> list = new ArrayList<>();
+		while(decls instanceof MethodDeclarationsRecursive){
+			MethodDeclarationsRecursive methDecl = (MethodDeclarationsRecursive)decls;
+			
+			list.add(methDecl.getMethodDeclaration());
+		}
+		return list;
 	}
 }

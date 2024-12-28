@@ -47,7 +47,7 @@ public class Utils{
 	}
 	/** Converts Type object to Struct object
 	* @param type
-	* @return Struct object associated with Type object, if Type is of unknown type, it will return noObj
+	* @return Struct object associated with Type object, if Type is of unknown type, it will return noType
 	 */
 	static public Struct inferType(Type type){
 		String typeName = type.getTypeName();

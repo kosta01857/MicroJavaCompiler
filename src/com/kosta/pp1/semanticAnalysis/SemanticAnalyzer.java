@@ -1,5 +1,8 @@
 package com.kosta.pp1.semanticAnalysis;
 
+import com.kosta.pp1.ast.ClassBody;
+import com.kosta.pp1.ast.ClassDeclarationExtend;
+import com.kosta.pp1.ast.ClassDeclarationNoExtend;
 import com.kosta.pp1.ast.ConstDeclarationList;
 import com.kosta.pp1.ast.GlobalVarDeclarationList;
 import com.kosta.pp1.ast.LocalVarDeclarations;
@@ -9,8 +12,10 @@ import com.kosta.pp1.ast.MethodSignature;
 import com.kosta.pp1.ast.ProgName;
 import com.kosta.pp1.ast.Program;
 import com.kosta.pp1.ast.Statements;
+import com.kosta.pp1.ast.Type;
 import com.kosta.pp1.ast.VarDeclarationList;
 import com.kosta.pp1.ast.VisitorAdaptor;
+
 import rs.etf.pp1.symboltable.Tab;
 import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Struct;
@@ -52,33 +57,22 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		Analyzer.definitionListPass(list);
 	}
 	public void visit(MethodDefinitionNoLocals def) {
-		MethodSignature signature = def.getMethodSignature();
-		Statements statements = def.getStatements();
-		Obj funcObj = Register.registerMethod(signature);
-		Tab.chainLocalSymbols(funcObj);
-		Analyzer.currentFunction = funcObj;
-		Analyzer.returnFound = false;
-		Analyzer.statementsPass(statements);
-		if(funcObj.getType().getKind() != Struct.None && !Analyzer.returnFound){
-			Utils.report_error("function "+funcObj.getName() + " must have a return statement",def);
-		}
-		Tab.closeScope();
+		Analyzer.methodDeclarationPass(def);
 	}
 
 	public void visit(MethodDefinition methodDefinition) {
-		MethodSignature signature = methodDefinition.getMethodSignature();
-		LocalVarDeclarations varDecls = methodDefinition.getLocalVarDeclarations();
-		Statements statements = methodDefinition.getStatements();
-		Obj funcObj = Register.registerMethod(signature);
-		Register.registerLocalVariables(varDecls);
-		Tab.chainLocalSymbols(funcObj);
-		Analyzer.currentFunction = funcObj;
-		Analyzer.returnFound = false;
-		Analyzer.statementsPass(statements);
-		if(funcObj.getType().getKind() != Struct.None && !Analyzer.returnFound){
-			Utils.report_error("function "+funcObj.getName() + " must have a return statement",methodDefinition);
-		}
+		Analyzer.methodDeclarationPass(methodDefinition);
+	}
+
+	public void visit(ClassDeclarationExtend classDecl){
+		Obj classObj = Register.registerClass(classDecl);
+		Tab.chainLocalSymbols(classObj);
 		Tab.closeScope();
-		// Tab.dump();
+	}
+
+	public void visit(ClassDeclarationNoExtend classDecl){
+		Obj classObj = Register.registerClass(classDecl);
+		Tab.chainLocalSymbols(classObj);
+		Tab.closeScope();
 	}
 }

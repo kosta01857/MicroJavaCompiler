@@ -12,6 +12,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import com.kosta.pp1.ast.ArrayDecl;
+import com.kosta.pp1.ast.ClassBody;
+import com.kosta.pp1.ast.ClassDeclaration;
+import com.kosta.pp1.ast.ClassDeclarationExtend;
+import com.kosta.pp1.ast.ClassDeclarationNoExtend;
 import com.kosta.pp1.ast.FuncPars;
 import com.kosta.pp1.ast.IdDecl;
 import rs.etf.pp1.symboltable.Tab;
@@ -25,6 +29,7 @@ import com.kosta.pp1.ast.VarDeclarationList;
 
 public class Register {
 	static Map<Obj, List<Struct>> functionTypeMap = new HashMap<>();
+	static boolean inClass = false;
 	static List<Struct> inBuiltFuncGetArgTypes(String func){
 		List<Struct> type = new ArrayList<>();
 		switch(func){
@@ -79,7 +84,7 @@ public class Register {
 			Struct arrStruct = new Struct(Struct.Array);
 			arrStruct.setElementType(myType);
 			myType = arrStruct;
-			ret = Tab.insert(Obj.Var, name, arrStruct);
+			ret = Tab.insert(inClass ? Obj.Fld : Obj.Var, name, arrStruct);
 		} else {
 			IdDecl idDecl = (IdDecl) decl;
 			name = idDecl.getIdentDecl().getName();
@@ -87,7 +92,7 @@ public class Register {
 				Utils.report_error("Variable with name " + name + " was already declared!", decl);
 				return null;
 			}
-			ret = Tab.insert(Obj.Var, name, myType);
+			ret = Tab.insert(inClass ? Obj.Fld : Obj.Var, name, myType);
 		}
 		Utils.reportDeclaration(ret, decl);
 		return ret;
@@ -151,5 +156,41 @@ public class Register {
 		List<VarDeclarationList> declLists = Finder.findVarDeclarationLists(localVarDeclaration);
 		Utils.report_info("Local variables:", null);
 		declLists.forEach(Analyzer::declarationListPass);
+	}
+	static Obj registerClass(ClassDeclaration classDecl){
+		ClassBody body;
+		Obj classObj;
+		if(classDecl instanceof ClassDeclarationNoExtend){
+			ClassDeclarationNoExtend classD = (ClassDeclarationNoExtend)classDecl;
+			String className = classD.getName();
+			if(Utils.objExists(className)){
+				Utils.report_error("identifier "+className+" already exists!",classDecl);
+				return null;
+			}
+			Struct classStruct = new Struct(Struct.Class);
+			classObj = Tab.insert(Obj.Type,className,classStruct);
+			body = classD.getClassBody();
+		}
+		else{
+			ClassDeclarationExtend classD = (ClassDeclarationExtend)classDecl;
+			String className = classD.getName();
+			if(Utils.objExists(className)){
+				Utils.report_error("identifier "+className+" already exists!",classDecl);
+				return null;
+			}
+			Struct classStruct = new Struct(Struct.Class);
+			Type extendType = classD.getType();
+			Struct extendStruct = Utils.inferType(extendType);
+			if(extendStruct == Tab.noType){
+				Utils.report_info("parent class of class "+className + " doesnt exist!",classDecl);
+				return null;
+			}
+			classStruct.setElementType(extendStruct);
+			classObj = Tab.insert(Obj.Type,className,classStruct);
+			body = classD.getClassBody();
+		}
+		Tab.openScope();
+		Analyzer.classBodyPass(body);
+		return classObj;
 	}
 }
