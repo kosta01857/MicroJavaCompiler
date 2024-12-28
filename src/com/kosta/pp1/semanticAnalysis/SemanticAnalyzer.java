@@ -15,6 +15,7 @@ import com.kosta.pp1.ast.Statements;
 import com.kosta.pp1.ast.Type;
 import com.kosta.pp1.ast.VarDeclarationList;
 import com.kosta.pp1.ast.VisitorAdaptor;
+import com.kosta.pp1.utils.myDumpSymbolTableVisitor;
 
 import rs.etf.pp1.symboltable.Tab;
 import rs.etf.pp1.symboltable.concepts.Obj;
@@ -65,12 +66,14 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	}
 
 	public void visit(ClassDeclarationExtend classDecl){
+		Utils.report_info("Class declaration", null);
 		Obj classObj = Register.registerClass(classDecl);
 		Tab.chainLocalSymbols(classObj);
 		Tab.closeScope();
 	}
 
 	public void visit(ClassDeclarationNoExtend classDecl){
+		Utils.report_info("Class declaration", null);
 		Obj classObj = Register.registerClass(classDecl);
 		Tab.chainLocalSymbols(classObj);
 		Tab.closeScope();

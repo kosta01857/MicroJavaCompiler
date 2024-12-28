@@ -15,7 +15,7 @@ import rs.etf.pp1.symboltable.concepts.Struct;
 
 public class Utils{
 	
-	static enum ObjectName{
+	public static enum ObjectName{
 		Const("Const"),
 		Var("Var"),
 		Type("Type"),

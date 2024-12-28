@@ -4,21 +4,26 @@ import rs.etf.pp1.symboltable.Tab;
 import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Struct;
 
+import java.util.Collection;
+import java.util.Iterator;
 
 import com.kosta.pp1.ast.ArrayAccess;
+import com.kosta.pp1.ast.Designator;
 import com.kosta.pp1.ast.DesignatorTail;
 import com.kosta.pp1.ast.Expression;
 import com.kosta.pp1.ast.Factor;
 import com.kosta.pp1.ast.FactorIdent;
-import com.kosta.pp1.ast.MethodCall;
+import com.kosta.pp1.ast.MemberAccess;
 import com.kosta.pp1.semanticAnalysis.TypeChecker;
 import com.kosta.pp1.semanticAnalysis.Utils;
+import com.kosta.pp1.utils.myDumpSymbolTableVisitor;
 
 class FactorIdentAnalyzer implements FactorAnalyzer{
 	@Override
 	public boolean analyze(Factor factor,Struct type,int cnt){
 		FactorIdent factorI = (FactorIdent) factor;
-        String name = factorI.getDesignator().getName();
+		Designator designator = factorI.getDesignator();
+        String name = designator.getName();
         Obj obj = Tab.find(name);
         Utils.reportUse(obj, factorI);
         if ((obj.getType().isRefType() || obj.getType().getKind() != Struct.Int) && cnt > 1) {
@@ -29,31 +34,42 @@ class FactorIdentAnalyzer implements FactorAnalyzer{
             Utils.report_error("use of undeclared identifier " + name, factorI);
             return true;
         }
-		Struct objType = obj.getType();
-		if(objType.getKind() == Struct.Array) objType = objType.getElemType();
-        if (!objType.assignableTo(type)) {
-            Utils.report_error("cannot assign type of " + Utils.typeString(objType), factorI);
-            return true;
-        }
-		DesignatorTail tail = factorI.getDesignator().getDesignatorTail();
-		if(analyzeTail(tail)) {
+		DesignatorTail tail = designator.getDesignatorTail();
+		if(analyzeTail(obj,tail,type)) {
 			return true;
 		}
         return false;
 	}
 
 
-	public boolean analyzeTail(DesignatorTail tail){
-		while(tail instanceof MethodCall || tail instanceof ArrayAccess){
-			if(tail instanceof MethodCall){
-				MethodCall methodCall = (MethodCall)tail;
-				String ident = methodCall.getIdent();
-				Obj fieldObj = Tab.find(ident);
-				if (fieldObj.getKind() != Obj.Fld){
-					Utils.report_error("no such field exists", tail);
+	public boolean analyzeTail(Obj designator, DesignatorTail tail,Struct leftHandType){
+		Struct designatorType = designator.getType();
+		Collection<Obj> localSymbols = designatorType.getMembers();
+		Utils.report_info("number of members is " + localSymbols.size() ,tail);
+		while(tail instanceof MemberAccess|| tail instanceof ArrayAccess){
+			if(tail instanceof MemberAccess){
+				MemberAccess memberAccess = (MemberAccess)tail;
+				String ident = memberAccess.getIdent();
+				boolean found = false;
+				Obj o = null;
+				Iterator<Obj> iter = localSymbols.iterator();
+				while(iter.hasNext()){
+					o = iter.next();
+					Utils.report_info("symbol " + o.getName(),tail);
+					if (o.getName().equals(ident)){
+						found = true;
+						break;
+					}
+				}
+				Obj fieldObj = o;
+				if (!found || fieldObj.getKind() != Obj.Fld && fieldObj.getKind() != Obj.Meth){
+					Utils.report_error("no such class member exists", tail);
 					return true;
 				}
-				tail = methodCall.getDesignatorTail();
+				if (!fieldObj.getType().compatibleWith(leftHandType)){
+					return true;
+				}
+				tail = memberAccess.getDesignatorTail();
 			}
 			else {
 				ArrayAccess arrayAccess = (ArrayAccess)tail;

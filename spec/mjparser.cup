@@ -61,7 +61,7 @@ nonterminal MethodChain, ArrayChain, Condition, ConditionTerm, ConditionFact;
 nonterminal AddTerm, Term, Factor, NewType, FunctionArgumentList, ConstDeclaration;
 nonterminal VarDeclarationList, MethodSignatures, InterfaceBody, MethodList;
 nonterminal InterfaceElements, InterfaceElement, DesignatorTail, VarDeclarationListGlobal;
-nonterminal ProgName, Program;
+nonterminal ProgName, Program, ClassMethodDeclarations;
 nonterminal Type, VarDeclaration, IdDefinitionList, ConstDeclarationList, IdentDecl;
 nonterminal rs.etf.pp1.symboltable.concepts.Struct IdDeclaration;
 
@@ -75,7 +75,10 @@ IdDeclaration ::= (IdDecl) IdentDecl | (ArrayDecl)ArrayDeclaration;
 IdentDecl ::= (IdentDecl)IDENT:name;
 ArrayDeclaration ::= (ArrayDeclaration)IDENT:name LSQBRACE RSQBRACE;
 IdDefinition  ::=(IdDefinition) IDENT:name EQUAL Literal:val;
-ClassBody ::= (ClassBody)LBRACE LocalVarDeclarations:LocalVarDeclarations LBRACE MethodDeclarations:MethodDeclarations RBRACE RBRACE; 
+ClassBody ::= (ClassBody)LBRACE LocalVarDeclarations:LocalVarDeclarations ClassMethodDeclarations:ClassMethodDeclarations  RBRACE; 
+ClassMethodDeclarations ::= /* nothing */
+							| (ClassMethodDecls)LBRACE MethodDeclarations:MethodDeclarations RBRACE
+							;
 Type ::= (Type) IDENT:typeName;
 Mulop ::= MUL | DIV | MOD;
 Addop ::= PLUS | MINUS;
@@ -202,7 +205,7 @@ DesignatorStatement ::= (VarDesignation) Designator:Designator EQUAL Expression:
 Designator ::=(Designator) IDENT:name DesignatorTail:tail;
 
 DesignatorTail ::= /* nothing */
-                 | (MethodCall) DOT IDENT:ident DesignatorTail:Tail
+                 | (MemberAccess) DOT IDENT:ident DesignatorTail:Tail
                  | (ArrayAccess)LSQBRACE Expression:expr RSQBRACE DesignatorTail:Tail;
 
 					  

@@ -191,6 +191,7 @@ public class Register {
 		}
 		Tab.openScope();
 		Analyzer.classBodyPass(body);
+		classObj.getType().setMembers(Tab.currentScope().getLocals());
 		return classObj;
 	}
 }

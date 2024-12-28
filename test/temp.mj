@@ -1,15 +1,11 @@
 program mj
-	bool c;
 	int b;
-	class Test{
+	class Test {
 		int a;
-	};
+	}
 {
 	void main() int aaa[];Test test;{
-		aaa = new int[5];
-		b = aaa[3];
-		c = true;
+		test = new Test();
 		b = test.a;
-		return;
 	}
 }

@@ -2,6 +2,8 @@ package com.kosta.pp1.semanticAnalysis;
 
 import com.kosta.pp1.ast.Break;
 import com.kosta.pp1.ast.ClassBody;
+import com.kosta.pp1.ast.ClassMethodDeclarations;
+import com.kosta.pp1.ast.ClassMethodDecls;
 import com.kosta.pp1.ast.Condition;
 import com.kosta.pp1.ast.ConstDeclarationList;
 import com.kosta.pp1.ast.Continue;
@@ -325,11 +327,15 @@ public class Analyzer {
 	
 	static void classBodyPass(ClassBody body){
 		Register.inClass = true;
-		MethodDeclarations methodDecls = body.getMethodDeclarations();
+		ClassMethodDeclarations classMethodDecls = body.getClassMethodDeclarations();
+		if (classMethodDecls instanceof ClassMethodDecls){
+			ClassMethodDecls decls = (ClassMethodDecls)classMethodDecls;
+			MethodDeclarations methodDecls = decls.getMethodDeclarations();
+			List<MethodDeclaration> methodDeclList = Finder.findMethodDeclarations(methodDecls);
+			methodDeclList.forEach(Analyzer::methodDeclarationPass);
+		}
 		LocalVarDeclarations localVarDecls = body.getLocalVarDeclarations();
 		List<VarDeclarationList> varDeclLists = Finder.findVarDeclarationLists(localVarDecls);
-		List<MethodDeclaration> methodDeclList = Finder.findMethodDeclarations(methodDecls);
-		methodDeclList.forEach(Analyzer::methodDeclarationPass);
 		varDeclLists.forEach(Analyzer::declarationListPass);
 		Register.inClass = false;
 	}
