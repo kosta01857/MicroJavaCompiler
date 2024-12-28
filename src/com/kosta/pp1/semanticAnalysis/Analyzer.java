@@ -1,7 +1,5 @@
 package com.kosta.pp1.semanticAnalysis;
 
-import com.kosta.pp1.ast.ActPars;
-import com.kosta.pp1.ast.ActParsConcrete;
 import com.kosta.pp1.ast.Break;
 import com.kosta.pp1.ast.Condition;
 import com.kosta.pp1.ast.ConstDeclarationList;
@@ -30,6 +28,10 @@ import com.kosta.pp1.ast.IfStatement;
 import com.kosta.pp1.ast.IfStmt;
 import com.kosta.pp1.ast.PostDec;
 import com.kosta.pp1.ast.PostInc;
+import com.kosta.pp1.ast.ReturnStatement;
+import com.kosta.pp1.ast.ReturnStmt;
+import com.kosta.pp1.ast.ReturnTyped;
+import com.kosta.pp1.ast.ReturnVoid;
 import com.kosta.pp1.ast.SetDesignation;
 import com.kosta.pp1.ast.Statement;
 import com.kosta.pp1.ast.StatementBlock;
@@ -38,6 +40,7 @@ import com.kosta.pp1.ast.Type;
 
 public class Analyzer {
 	static boolean inDoWhile = false;
+	static boolean returnFound = false;
 	static Obj currentFunction = null;
 
 	static void varDesignationPass(VarDesignation varDesignation) {
@@ -53,7 +56,8 @@ public class Analyzer {
 		typeCheck |= ident.getKind() == Obj.Fld;
 		typeCheck |= ident.getKind() == Obj.Elem;
 		if (!typeCheck) {
-			Utils.report_error("Designator cannot be of type " + Utils.typeString(type), varDesignation);
+			Utils.report_error("Designator cannot be of type " + Utils.ObjectName.values()[ident.getKind()].name,
+					varDesignation);
 			return;
 		}
 		boolean error = TypeChecker.ExprTypeCheck(expr, type);
@@ -143,49 +147,25 @@ public class Analyzer {
 			varDesignationPass((VarDesignation) dStatement);
 		} else if (dStatement instanceof SetDesignation) {
 			setDesignationPass((SetDesignation) dStatement);
-		} else if (dStatement instanceof FunctionCall){
-			functionCallPass((FunctionCall)dStatement);
+		} else if (dStatement instanceof FunctionCall) {
+			functionCallPass((FunctionCall) dStatement);
 		}
 	}
 
-	static void functionCallPass(FunctionCall call){
+	static void functionCallPass(FunctionCall call) {
 		Designator d = call.getDesignator();
 		String name = d.getName();
-		if(!Utils.objExists(name)){
-			Utils.report_error("call of undeclared function "+name,call);
+		if (!Utils.objExists(name)) {
+			Utils.report_error("call of undeclared function " + name, call);
 			return;
 		}
-		currentFunction = Tab.find(name);
-		boolean funcCheck;
-		if (currentFunction.getKind() != Obj.Meth){
-			Utils.report_error("Designator " + name  + " is not a function!",call);
+		Obj currentFunction = Tab.find(name);
+		if (currentFunction.getKind() != Obj.Meth) {
+			Utils.report_error("Designator " + name + " is not a function!", call);
 			return;
 		}
-		Utils.reportUse(currentFunction,call);
-		actParsPass(call.getActPars());
-	}
-
-	static void actParsPass(ActPars actPars){
-		List<Struct> args = Register.functionTypeMap.get(currentFunction);
-		if(actPars instanceof ActParsConcrete){
-			ActParsConcrete actParamsC = (ActParsConcrete) actPars;
-			List<Expression> expressions = Finder.findExpressions(actParamsC.getExpressions());
-			if(args.size() != expressions.size()){
-				Utils.report_error("Call of function " + currentFunction.getName() + " does not match its signature",actPars);
-				return;
-			}
-			for(int i = 0;i < expressions.size();i++){
-				Expression exp = expressions.get(i);
-				Struct argType = args.get(i);
-				if(!TypeChecker.ExprTypeCheck(exp,argType)){
-					Utils.report_error("Call of function " + currentFunction.getName() + " does not match its signature",actPars);
-					return;
-				}
-			}
-		}
-		else if (args.size() > 0){
-			Utils.report_error("Call of function " + currentFunction.getName() + " does not match its signature",actPars);
-		}
+		Utils.reportUse(currentFunction, call);
+		TypeChecker.actParsTypeCheck(call.getActPars(), currentFunction);
 	}
 
 	static void statementPass(Statement statement) {
@@ -209,6 +189,28 @@ public class Analyzer {
 			if (!inDoWhile) {
 				Utils.report_error("cannot use continue outside do while loop", statement);
 			}
+		} else if (statement instanceof ReturnStmt) {
+			returnStatementPass((ReturnStmt) statement);
+		}
+	}
+
+	static void returnStatementPass(ReturnStmt stmt) {
+		ReturnStatement retStmt = stmt.getReturnStatement();
+		if (retStmt instanceof ReturnVoid) {
+			if (currentFunction.getType().getKind() != Struct.None) {
+				Utils.report_error(
+						"this function must return the value of type " + Utils.typeString(currentFunction.getType()),
+						stmt);
+			}
+			return;
+		}
+		returnFound = true;
+		ReturnTyped retTyped = (ReturnTyped) retStmt;
+		Expression expr = retTyped.getExpression();
+		if (!TypeChecker.ExprTypeCheck(expr, currentFunction.getType())) {
+			Utils.report_error(
+					"declared return type of function does not match the type of value you are trying to return!",
+					stmt);
 		}
 	}
 

@@ -160,7 +160,7 @@ Statement ::=(DesignatorStmt)DesignatorStatement SEMI
            | (IfStmt)IfStatement 
            | (Break)BREAK SEMI
            | (Continue)CONTINUE SEMI
-           | ReturnStatement
+           | (ReturnStmt)ReturnStatement
            | READ LPAREN Designator RPAREN SEMI
            | PrintStatement
            | (WhileStmt)DoWhile
@@ -168,8 +168,8 @@ Statement ::=(DesignatorStmt)DesignatorStatement SEMI
 		   | error SEMI:l {: parser.report_error("Oporavak od greske pri dodeli vrednostina liniji " +lleft,null); :}
            ;
 
-ReturnStatement ::= RETURN SEMI
-				  | RETURN Expression SEMI
+ReturnStatement ::= (ReturnVoid)RETURN SEMI
+				  | (ReturnTyped)RETURN Expression SEMI
 				  ;           
 PrintStatement ::= PRINT LPAREN Expression RPAREN SEMI
 				|  PRINT LPAREN Expression COMMA NUMBER RPAREN SEMI
@@ -202,8 +202,8 @@ DesignatorStatement ::= (VarDesignation) Designator:Designator EQUAL Expression:
 Designator ::=(Designator) IDENT:name DesignatorTail:tail;
 
 DesignatorTail ::= /* nothing */
-                 | DOT IDENT DesignatorTail
-                 | LSQBRACE Expression RSQBRACE DesignatorTail;
+                 | (MethodCall) DOT IDENT DesignatorTail
+                 | (ArrayAccess)LSQBRACE Expression RSQBRACE DesignatorTail;
 
 					  
 ActPars ::= /* nothing */
@@ -230,12 +230,12 @@ Term ::= (TermConcrete) Factor:Factor
 Factor ::= (FactorLiteral) Literal:Literal
 		|  LPAREN Expression RPAREN
 		|  (FactorNewType) NewType
-		|  Designator LPAREN ActPars RPAREN
+		|  (FactorFunctionCall)Designator LPAREN ActPars RPAREN
 		|  (FactorIdent) Designator
 		;
 		
-NewType ::= NEW Type LSQBRACE Expression RSQBRACE
-		|   NEW Type LPAREN ActPars RPAREN
+NewType ::= (NewArray)NEW Type LSQBRACE Expression RSQBRACE
+		|   (NewClass)NEW Type LPAREN ActPars RPAREN
 		;
 
 IfStatement ::= (IfOnly) IF LPAREN Condition RPAREN Statement

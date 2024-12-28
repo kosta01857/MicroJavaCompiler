@@ -5,7 +5,6 @@ import com.kosta.pp1.ast.VarDeclaration;
 import com.kosta.pp1.ast.FunctionParameters;
 import com.kosta.pp1.ast.IdDeclaration;
 import java.util.List;
-import java.util.Map;
 import java.util.ArrayList;
 import com.kosta.pp1.ast.VarDecl;
 import com.kosta.pp1.ast.VarDeclarationList;
@@ -39,9 +38,6 @@ import com.kosta.pp1.ast.Factor;
 import com.kosta.pp1.ast.FactorIdent;
 import com.kosta.pp1.ast.FactorLiteral;
 import com.kosta.pp1.ast.FunctionParameterDeclConcrete;
-import com.kosta.pp1.ast.MethodDeclaration;
-import com.kosta.pp1.ast.MethodDeclarations;
-import com.kosta.pp1.ast.MethodDeclarationsRecursive;
 
 public class Finder {
 	static List<Statement> findStatements(Statements statements) {
@@ -128,16 +124,12 @@ public class Finder {
 		while (term instanceof TermRecursive) {
 			TermRecursive termRecursive = (TermRecursive) term;
 			Factor factor = termRecursive.getFactor();
-			if (factor instanceof FactorLiteral || factor instanceof FactorIdent) {
-				factors.add(factor);
-			}
+			factors.add(factor);
 			term = termRecursive.getTerm();
 		}
 		TermConcrete termConcrete = (TermConcrete) term;
 		Factor factor = termConcrete.getFactor();
-		if (factor instanceof FactorLiteral || factor instanceof FactorIdent) {
-			factors.add(factor);
-		}
+		factors.add(factor);
 		return factors;
 	}
 

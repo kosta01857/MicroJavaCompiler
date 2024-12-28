@@ -1,14 +1,9 @@
 program mj
-	int aaa;
-	int array[];
 	bool c;
 {
-	char a(int a) int aaa;bool bo[]; {
-		do{a++;break;} while(a);
-	}
-	int foo(int a){aaa--;}
-	void main(){
-		aaa++;
-		foo(200%5);
+	void main() int aaa[];{
+		aaa = new int[5];
+		c = true;
+		return;
 	}
 }

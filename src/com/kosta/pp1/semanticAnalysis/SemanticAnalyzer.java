@@ -1,11 +1,8 @@
 package com.kosta.pp1.semanticAnalysis;
-import java.util.List;
 
 import com.kosta.pp1.ast.ConstDeclarationList;
 import com.kosta.pp1.ast.GlobalVarDeclarationList;
 import com.kosta.pp1.ast.LocalVarDeclarations;
-import com.kosta.pp1.ast.MethodDeclaration;
-import com.kosta.pp1.ast.MethodDeclarationsRecursive;
 import com.kosta.pp1.ast.MethodDefinition;
 import com.kosta.pp1.ast.MethodDefinitionNoLocals;
 import com.kosta.pp1.ast.MethodSignature;
@@ -14,7 +11,6 @@ import com.kosta.pp1.ast.Program;
 import com.kosta.pp1.ast.Statements;
 import com.kosta.pp1.ast.VarDeclarationList;
 import com.kosta.pp1.ast.VisitorAdaptor;
-
 import rs.etf.pp1.symboltable.Tab;
 import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Struct;
@@ -60,7 +56,12 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		Statements statements = def.getStatements();
 		Obj funcObj = Register.registerMethod(signature);
 		Tab.chainLocalSymbols(funcObj);
+		Analyzer.currentFunction = funcObj;
+		Analyzer.returnFound = false;
 		Analyzer.statementsPass(statements);
+		if(funcObj.getType().getKind() != Struct.None && !Analyzer.returnFound){
+			Utils.report_error("function "+funcObj.getName() + " must have a return statement",def);
+		}
 		Tab.closeScope();
 	}
 
@@ -71,7 +72,12 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		Obj funcObj = Register.registerMethod(signature);
 		Register.registerLocalVariables(varDecls);
 		Tab.chainLocalSymbols(funcObj);
+		Analyzer.currentFunction = funcObj;
+		Analyzer.returnFound = false;
 		Analyzer.statementsPass(statements);
+		if(funcObj.getType().getKind() != Struct.None && !Analyzer.returnFound){
+			Utils.report_error("function "+funcObj.getName() + " must have a return statement",methodDefinition);
+		}
 		Tab.closeScope();
 		// Tab.dump();
 	}

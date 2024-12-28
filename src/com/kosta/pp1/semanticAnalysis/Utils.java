@@ -14,6 +14,22 @@ import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Struct;
 
 public class Utils{
+	
+	static enum ObjectName{
+		Const("Const"),
+		Var("Var"),
+		Type("Type"),
+		Method("Method"),
+		Field("Field"),
+		Element("Element"),
+		Prog("Program");
+		String name;
+		ObjectName(String s){
+			this.name = s;
+		}
+	}
+
+
 	static Logger log = Logger.getLogger(SemanticAnalyzer.class);
 	static public boolean objExistsInScope(String name){
 		Obj obj = Tab.currentScope().findSymbol(name);
@@ -33,7 +49,7 @@ public class Utils{
 	* @param type
 	* @return Struct object associated with Type object, if Type is of unknown type, it will return noObj
 	 */
-	static Struct inferType(Type type){
+	static public Struct inferType(Type type){
 		String typeName = type.getTypeName();
 		Obj typeNode = Tab.find(typeName);
 		if(typeNode.getKind() == Obj.Type){
@@ -136,9 +152,10 @@ public class Utils{
 	}
 	static public void reportUse(Obj object,SyntaxNode node){
 		String name = object.getName();
+		boolean global = object.getLevel() > 0 ? false:true;
 		switch(object.getKind()){
 			case 0: {report_info("use of constant variable "+name + " of type " + typeString(object.getType()) + " level: " + object.getLevel(),node); break;}
-			case 1: {report_info("use of variable "+name + " of type " + typeString(object.getType()) + " level: " + object.getLevel(),node); break;}
+			case 1: {report_info("use of "+ (global ? "global":"local") + " variable "+name + " of type " + typeString(object.getType()) + " level: " + object.getLevel(),node); break;}
 			case 3: {report_info("function call of name "+name + " of return type " + typeString(object.getType()) + " number of args: " + object.getLevel(),node); break;}
 		}
 	}
