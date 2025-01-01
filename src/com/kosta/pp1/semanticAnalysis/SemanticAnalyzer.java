@@ -3,6 +3,8 @@ package com.kosta.pp1.semanticAnalysis;
 import com.kosta.pp1.ast.ClassBody;
 import com.kosta.pp1.ast.ClassDeclarationExtend;
 import com.kosta.pp1.ast.ClassDeclarationNoExtend;
+import com.kosta.pp1.ast.ConditionConcrete;
+import com.kosta.pp1.ast.ConditionRecursive;
 import com.kosta.pp1.ast.ConstDeclarationList;
 import com.kosta.pp1.ast.GlobalVarDeclarationList;
 import com.kosta.pp1.ast.LocalVarDeclarations;
@@ -78,4 +80,5 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		Tab.chainLocalSymbols(classObj);
 		Tab.closeScope();
 	}
+	
 }

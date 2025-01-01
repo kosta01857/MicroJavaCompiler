@@ -49,4 +49,23 @@ class FactorNewTypeAnalyzer implements FactorAnalyzer{
 		typeCheck &= type.getKind() == Struct.Class;
 		return !typeCheck;
 	}
+
+	private Struct getNewArrayType(NewArray newArr){
+		return Utils.inferType(newArr.getType());
+	}
+
+	private Struct getNewClassType(NewClass newClass){
+		return Utils.inferType(newClass.getType());
+	}
+
+	public Struct getType(Factor factor){
+		FactorNewType factN = (FactorNewType)factor;
+		NewType newType = factN.getNewType();
+		if (newType instanceof NewArray){
+			return getNewArrayType((NewArray)newType);
+		}
+		else{
+			return getNewClassType((NewClass)newType);
+		}
+	}
 }

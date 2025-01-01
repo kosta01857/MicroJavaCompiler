@@ -146,8 +146,9 @@ public class Utils{
 						return sb.toString();
 
 			}
-			default:
-				return "";
+			case 4:
+				return "Class";
+			default: return "None";
 		}
 	}
 	static public void reportUse(Obj object,SyntaxNode node){

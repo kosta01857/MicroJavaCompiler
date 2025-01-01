@@ -35,12 +35,12 @@ public class RuleVisitor extends VisitorAdaptor{
 	
 
 	@Override
-   public void visit(PrintStatementDerived1 print) {
+   public void visit(PrintOne print) {
 	printCallCount++;
 	}
 	
 	@Override
-   public void visit(PrintStatementDerived2 print) {
+   public void visit(PrintTwo print) {
 	printCallCount++;
 	}
 	

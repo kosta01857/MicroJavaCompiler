@@ -20,5 +20,18 @@ class FactorFunctionCallAnalyzer implements FactorAnalyzer{
 		}
 		return true;
 	}
+
+	@Override
+	public Struct getType(Factor factor){
+		FactorFunctionCall funcCall = (FactorFunctionCall)factor;
+		Designator d = funcCall.getDesignator();
+		String name = d.getName();
+		Obj obj = Tab.find(name);
+		if (obj.getKind() == Obj.Meth){
+			return obj.getType();
+		}
+		return null;
+	}
+	
 }
 

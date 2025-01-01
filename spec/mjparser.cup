@@ -82,7 +82,7 @@ ClassMethodDeclarations ::= /* nothing */
 Type ::= (Type) IDENT:typeName;
 Mulop ::= MUL | DIV | MOD;
 Addop ::= PLUS | MINUS;
-Relop ::= GT | LT | EQ | NEQ | GTE | LTE;
+Relop ::= GT | LT | (Equal)EQ | (NotEqual)NEQ | GTE | LTE;
 
 /* Main rules */
 Program ::= (Program) PROG ProgName:p Declarations LBRACE MethodDeclarations RBRACE;
@@ -158,14 +158,14 @@ InterfaceElement ::= MethodSignature SEMI
 Statements ::= /* nothing */
 			  | (StatementsRecursive)Statements:Statements Statement:Statement
 			  ;
-
+ 
 Statement ::=(DesignatorStmt)DesignatorStatement SEMI
            | (IfStmt)IfStatement 
            | (Break)BREAK SEMI
            | (Continue)CONTINUE SEMI
            | (ReturnStmt)ReturnStatement
-           | READ LPAREN Designator RPAREN SEMI
-           | PrintStatement
+           | (ReadStatement)READ LPAREN Designator RPAREN SEMI
+           | (PrintStmt)PrintStatement
            | (WhileStmt)DoWhile
            | (StatementBlock) LBRACE Statements RBRACE
 		   | error SEMI:l {: parser.report_error("Oporavak od greske pri dodeli vrednostina liniji " +lleft,null); :}
@@ -174,8 +174,8 @@ Statement ::=(DesignatorStmt)DesignatorStatement SEMI
 ReturnStatement ::= (ReturnVoid)RETURN SEMI
 				  | (ReturnTyped)RETURN Expression SEMI
 				  ;           
-PrintStatement ::= PRINT LPAREN Expression RPAREN SEMI
-				|  PRINT LPAREN Expression COMMA NUMBER RPAREN SEMI
+PrintStatement ::= (PrintOne) PRINT LPAREN Expression RPAREN SEMI
+				|  (PrintTwo) PRINT LPAREN Expression COMMA NUMBER RPAREN SEMI
 				;
 				
 DoWhile ::=  (WhileCond) DO Statements WHILE LPAREN Condition RPAREN SEMI
@@ -187,12 +187,13 @@ Condition ::= (ConditionConcrete)  ConditionTerm
 			| (ConditionRecursive) Condition OR ConditionTerm
 			;
 			
-ConditionTerm ::= ConditionFact
-				| ConditionTerm AND ConditionFact
+ConditionTerm ::= (ConditionTermConcrete)  ConditionFact
+				| (ConditionTermRecursive) ConditionTerm AND ConditionFact
+
 				;
 
-ConditionFact ::= Expression
-				| Expression Relop Expression
+ConditionFact ::= (ConditionFactExpression) Expression:exp
+				| (ConditionFactExpressions) Expression:exp1 Relop Expression:exp2
 				;
  
 DesignatorStatement ::= (VarDesignation) Designator:Designator EQUAL Expression:Expr
@@ -204,7 +205,7 @@ DesignatorStatement ::= (VarDesignation) Designator:Designator EQUAL Expression:
 
 Designator ::=(Designator) IDENT:name DesignatorTail:tail;
 
-DesignatorTail ::= /* nothing */
+DesignatorTail ::= (NoTail)/* nothing */
                  | (MemberAccess) DOT IDENT:ident DesignatorTail:Tail
                  | (ArrayAccess)LSQBRACE Expression:expr RSQBRACE DesignatorTail:Tail;
 

@@ -1,11 +1,17 @@
 program mj
 	int b;
+	int bo;
 	class Test {
 		int a;
 	}
+	class Other{
+		int b;
+		int c;
+	}
 {
 	void main() int aaa[];Test test;{
-		test = new Test();
-		b = test.a;
+		if(6 > 5){
+			b = 5;
+		}	
 	}
 }

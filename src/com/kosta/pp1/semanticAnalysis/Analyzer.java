@@ -5,6 +5,8 @@ import com.kosta.pp1.ast.ClassBody;
 import com.kosta.pp1.ast.ClassMethodDeclarations;
 import com.kosta.pp1.ast.ClassMethodDecls;
 import com.kosta.pp1.ast.Condition;
+import com.kosta.pp1.ast.ConditionFact;
+import com.kosta.pp1.ast.ConditionTerm;
 import com.kosta.pp1.ast.ConstDeclarationList;
 import com.kosta.pp1.ast.Continue;
 import com.kosta.pp1.ast.Designator;
@@ -22,6 +24,8 @@ import com.kosta.pp1.ast.WhileStmt;
 import rs.etf.pp1.symboltable.Tab;
 import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Struct;
+
+import java.util.ArrayList;
 import java.util.List;
 import com.kosta.pp1.ast.IdDeclaration;
 import com.kosta.pp1.ast.IdDefinition;
@@ -37,6 +41,11 @@ import com.kosta.pp1.ast.MethodDefinitionNoLocals;
 import com.kosta.pp1.ast.MethodSignature;
 import com.kosta.pp1.ast.PostDec;
 import com.kosta.pp1.ast.PostInc;
+import com.kosta.pp1.ast.PrintOne;
+import com.kosta.pp1.ast.PrintStatement;
+import com.kosta.pp1.ast.PrintStmt;
+import com.kosta.pp1.ast.PrintTwo;
+import com.kosta.pp1.ast.ReadStatement;
 import com.kosta.pp1.ast.ReturnStatement;
 import com.kosta.pp1.ast.ReturnStmt;
 import com.kosta.pp1.ast.ReturnTyped;
@@ -200,6 +209,52 @@ public class Analyzer {
 			}
 		} else if (statement instanceof ReturnStmt) {
 			returnStatementPass((ReturnStmt) statement);
+		} else if (statement instanceof PrintStmt){
+			printStatementPass((PrintStmt)statement);
+		} else if (statement instanceof ReadStatement){
+			readStatementPass((ReadStatement)statement);
+		}
+	}
+
+	static void printStatementPass(PrintStmt stmt){
+		PrintStatement printStmt = stmt.getPrintStatement();
+		Expression expr;
+		if (printStmt instanceof PrintOne){
+			PrintOne printOne = (PrintOne)printStmt;
+			expr = printOne.getExpression();
+		}
+		else{
+			PrintTwo printTwo = (PrintTwo)printStmt;
+			expr = printTwo.getExpression();
+		}
+		boolean typeCheck;
+		typeCheck = TypeChecker.ExprTypeCheck(expr,Tab.find("int").getType());
+		typeCheck |= TypeChecker.ExprTypeCheck(expr,Tab.find("char").getType());
+		typeCheck |= TypeChecker.ExprTypeCheck(expr,Tab.find("bool").getType());
+		typeCheck |= TypeChecker.ExprTypeCheck(expr,Tab.find("set").getType());
+		if(!typeCheck){
+			Utils.report_error("incorrect print call",stmt);
+		}
+	}
+	
+	static void readStatementPass(ReadStatement stmt){
+		Designator designator = stmt.getDesignator();
+		boolean typeCheck;
+		String name = designator.getName();
+		if(!Utils.objExists(name)){
+			Utils.report_error("use of undeclared identifer " + name,stmt);
+		}
+		Obj dObj = Tab.find(designator.getName());
+		Struct dType = dObj.getType();
+		typeCheck = dType.getKind() == Struct.Int;
+		typeCheck |= dType.getKind() == Struct.Bool;
+		typeCheck |= dType.getKind() == Struct.Char;
+		boolean objTypeCheck;
+		objTypeCheck = dObj.getKind() == Obj.Fld;
+		objTypeCheck |= dObj.getKind() == Obj.Var;
+		objTypeCheck |= dObj.getKind() == Obj.Elem;
+		if(!typeCheck || !objTypeCheck){
+			Utils.report_error("incorrect read call",stmt);
 		}
 	}
 
@@ -229,7 +284,10 @@ public class Analyzer {
 	}
 
 	static void conditionPass(Condition cond) {
-
+		List<ConditionTerm> terms = Finder.findConditionTerms(cond);
+		List<ConditionFact> condFactors = new ArrayList<>();
+		terms.forEach(term -> condFactors.addAll(Finder.findConditionFactors(term)));
+		TypeChecker.conditionTypeCheck(condFactors);
 	}
 
 	static void postDecPass(PostDec postDecExpr) {
@@ -331,8 +389,8 @@ public class Analyzer {
 		if (classMethodDecls instanceof ClassMethodDecls){
 			ClassMethodDecls decls = (ClassMethodDecls)classMethodDecls;
 			MethodDeclarations methodDecls = decls.getMethodDeclarations();
-			List<MethodDeclaration> methodDeclList = Finder.findMethodDeclarations(methodDecls);
-			methodDeclList.forEach(Analyzer::methodDeclarationPass);
+		List<MethodDeclaration> methodDeclList = Finder.findMethodDeclarations(methodDecls);
+		methodDeclList.forEach(Analyzer::methodDeclarationPass);
 		}
 		LocalVarDeclarations localVarDecls = body.getLocalVarDeclarations();
 		List<VarDeclarationList> varDeclLists = Finder.findVarDeclarationLists(localVarDecls);

@@ -34,6 +34,13 @@ import com.kosta.pp1.ast.FunctionParameterDeclRecursive;
 import com.kosta.pp1.ast.AddTerm;
 import com.kosta.pp1.ast.AddTermConcrete;
 import com.kosta.pp1.ast.AddTermRecursive;
+import com.kosta.pp1.ast.Condition;
+import com.kosta.pp1.ast.ConditionConcrete;
+import com.kosta.pp1.ast.ConditionFact;
+import com.kosta.pp1.ast.ConditionRecursive;
+import com.kosta.pp1.ast.ConditionTerm;
+import com.kosta.pp1.ast.ConditionTermConcrete;
+import com.kosta.pp1.ast.ConditionTermRecursive;
 import com.kosta.pp1.ast.Expression;
 import com.kosta.pp1.ast.Expressions;
 import com.kosta.pp1.ast.ExpressionsConcrete;
@@ -176,5 +183,29 @@ public class Finder {
 			list.add(methDecl.getMethodDeclaration());
 		}
 		return list;
+	}
+
+	static List<ConditionTerm> findConditionTerms(Condition condition){
+		List<ConditionTerm> terms = new ArrayList<>();
+		while(condition instanceof ConditionRecursive){
+			ConditionRecursive condR = (ConditionRecursive)condition;
+			terms.add(condR.getConditionTerm());
+			condition = condR.getCondition();
+		}
+		ConditionConcrete condC = (ConditionConcrete)condition;
+		terms.add(condC.getConditionTerm());
+		return terms;
+	}
+
+	static List<ConditionFact> findConditionFactors(ConditionTerm term){
+		List<ConditionFact> factors = new ArrayList<>();
+		while(term instanceof ConditionTermRecursive){
+			ConditionTermRecursive condTermR = (ConditionTermRecursive)term;
+			factors.add(condTermR.getConditionFact());
+			term = condTermR.getConditionTerm();
+		}
+		ConditionTermConcrete condTermC = (ConditionTermConcrete)term;
+		factors.add(condTermC.getConditionFact());
+		return factors;
 	}
 }
