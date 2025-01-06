@@ -179,8 +179,8 @@ public class Finder {
 		List<MethodDeclaration> list = new ArrayList<>();
 		while(decls instanceof MethodDeclarationsRecursive){
 			MethodDeclarationsRecursive methDecl = (MethodDeclarationsRecursive)decls;
-			
 			list.add(methDecl.getMethodDeclaration());
+			decls = methDecl.getMethodDeclarations();
 		}
 		return list;
 	}

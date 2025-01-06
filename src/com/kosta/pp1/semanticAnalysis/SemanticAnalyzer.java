@@ -1,24 +1,14 @@
 package com.kosta.pp1.semanticAnalysis;
-
-import com.kosta.pp1.ast.ClassBody;
 import com.kosta.pp1.ast.ClassDeclarationExtend;
 import com.kosta.pp1.ast.ClassDeclarationNoExtend;
-import com.kosta.pp1.ast.ConditionConcrete;
-import com.kosta.pp1.ast.ConditionRecursive;
 import com.kosta.pp1.ast.ConstDeclarationList;
 import com.kosta.pp1.ast.GlobalVarDeclarationList;
-import com.kosta.pp1.ast.LocalVarDeclarations;
 import com.kosta.pp1.ast.MethodDefinition;
 import com.kosta.pp1.ast.MethodDefinitionNoLocals;
-import com.kosta.pp1.ast.MethodSignature;
 import com.kosta.pp1.ast.ProgName;
 import com.kosta.pp1.ast.Program;
-import com.kosta.pp1.ast.Statements;
-import com.kosta.pp1.ast.Type;
 import com.kosta.pp1.ast.VarDeclarationList;
 import com.kosta.pp1.ast.VisitorAdaptor;
-import com.kosta.pp1.utils.myDumpSymbolTableVisitor;
-
 import rs.etf.pp1.symboltable.Tab;
 import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Struct;
@@ -59,6 +49,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	public void visit(ConstDeclarationList list) {
 		Analyzer.definitionListPass(list);
 	}
+
 	public void visit(MethodDefinitionNoLocals def) {
 		Analyzer.methodDeclarationPass(def);
 	}

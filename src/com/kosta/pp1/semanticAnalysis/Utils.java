@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 
 import com.kosta.pp1.ast.BOOL;
 import com.kosta.pp1.ast.CHAR;
+import com.kosta.pp1.ast.Expression;
 import com.kosta.pp1.ast.Literal;
 import com.kosta.pp1.ast.NUMBER;
 import com.kosta.pp1.ast.SyntaxNode;
@@ -49,11 +50,22 @@ public class Utils{
 	* @param type
 	* @return Struct object associated with Type object, if Type is of unknown type, it will return noType
 	 */
-	static public Struct inferType(Type type){
-		String typeName = type.getTypeName();
-		Obj typeNode = Tab.find(typeName);
-		if(typeNode.getKind() == Obj.Type){
-			return typeNode.getType();
+	static public Struct inferType(SyntaxNode sNode){
+		Struct S = Register.typeMap.get(sNode);
+		if(S != null) return S;
+		if(sNode instanceof Type){
+			String typeName = ((Type)sNode).getTypeName();
+			Obj typeNode = Tab.find(typeName);
+			if(typeNode.getKind() == Obj.Type){
+				Register.typeMap.put(sNode,typeNode.getType());
+				return typeNode.getType();
+			}
+			return Tab.noType;
+		}
+		else if (sNode instanceof Expression){
+			S = TypeChecker.getExpressionType((Expression)sNode);
+			Register.typeMap.put(sNode,S);
+			return S;
 		}
 		return Tab.noType;
 	}

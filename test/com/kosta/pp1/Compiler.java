@@ -16,6 +16,8 @@ import com.kosta.pp1.semanticAnalysis.SemanticAnalyzer;
 import com.kosta.pp1.utils.Log4JUtils;
 import com.kosta.pp1.utils.myDumpSymbolTableVisitor;
 
+import rs.etf.pp1.mj.runtime.*;
+
 public class Compiler{
 
 	static {
@@ -47,7 +49,9 @@ public class Compiler{
 			// ispis prepoznatih programskih konstrukcija
 			VisitorAdaptor v = new SemanticAnalyzer();
 			prog.traverseBottomUp(v); 
-			//Tab.dump(new myDumpSymbolTableVisitor());
+			
+			
+			Tab.dump(new myDumpSymbolTableVisitor());
 	      
 			//log.info(" Print count calls = " + v.printCallCount);
 

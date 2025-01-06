@@ -3,6 +3,9 @@ program mj
 	int bo;
 	class Test {
 		int a;
+		{
+			void meth1() int a;{}
+		}
 	}
 	class Other{
 		int b;

@@ -24,11 +24,13 @@ import com.kosta.pp1.ast.FunctionArgumentList;
 import com.kosta.pp1.ast.FunctionParameters;
 import com.kosta.pp1.ast.MethodSignatureTyped;
 import com.kosta.pp1.ast.MethodSignatureVoid;
+import com.kosta.pp1.ast.SyntaxNode;
 import com.kosta.pp1.ast.Type;
 import com.kosta.pp1.ast.VarDeclarationList;
 
 public class Register {
 	static Map<Obj, List<Struct>> functionTypeMap = new HashMap<>();
+	static Map<SyntaxNode,Struct> typeMap = new HashMap<>();
 	static boolean inClass = false;
 	static List<Struct> inBuiltFuncGetArgTypes(String func){
 		List<Struct> type = new ArrayList<>();
@@ -160,6 +162,7 @@ public class Register {
 	static Obj registerClass(ClassDeclaration classDecl){
 		ClassBody body;
 		Obj classObj;
+		Struct classStruct;
 		if(classDecl instanceof ClassDeclarationNoExtend){
 			ClassDeclarationNoExtend classD = (ClassDeclarationNoExtend)classDecl;
 			String className = classD.getName();
@@ -167,7 +170,7 @@ public class Register {
 				Utils.report_error("identifier "+className+" already exists!",classDecl);
 				return null;
 			}
-			Struct classStruct = new Struct(Struct.Class);
+			classStruct = new Struct(Struct.Class);
 			classObj = Tab.insert(Obj.Type,className,classStruct);
 			body = classD.getClassBody();
 		}
@@ -178,7 +181,7 @@ public class Register {
 				Utils.report_error("identifier "+className+" already exists!",classDecl);
 				return null;
 			}
-			Struct classStruct = new Struct(Struct.Class);
+			classStruct = new Struct(Struct.Class);
 			Type extendType = classD.getType();
 			Struct extendStruct = Utils.inferType(extendType);
 			if(extendStruct == Tab.noType){

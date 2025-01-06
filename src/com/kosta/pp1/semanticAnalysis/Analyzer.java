@@ -26,7 +26,10 @@ import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Struct;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import com.kosta.pp1.ast.IdDeclaration;
 import com.kosta.pp1.ast.IdDefinition;
 import com.kosta.pp1.ast.IfElse;
@@ -82,16 +85,17 @@ public class Analyzer {
 		Utils.reportUse(ident, varDesignation);
 	}
 
-	static void declarationListPass(VarDeclarationList list) {
+	static int declarationListPass(VarDeclarationList list) {
 		Type type = list.getType();
 		Struct struct = Utils.inferType(type);
 		if (struct == Tab.noType) {
 			Utils.report_error("Type of name " + type.getTypeName() + " doesnt exist", list);
-			return;
+			return 0;
 		}
 		SemanticAnalyzer.currentType = struct;
 		List<IdDeclaration> idDecls = Finder.findIdDeclarations(list.getVarDeclaration());
 		idDecls.forEach(Register::registerIdDeclaration);
+		return idDecls.size();
 	}
 
 	static void definitionListPass(ConstDeclarationList list) {
@@ -383,18 +387,22 @@ public class Analyzer {
 		inDoWhile = false;
 	}
 	
-	static void classBodyPass(ClassBody body){
+	static int classBodyPass(ClassBody body){
 		Register.inClass = true;
 		ClassMethodDeclarations classMethodDecls = body.getClassMethodDeclarations();
 		if (classMethodDecls instanceof ClassMethodDecls){
 			ClassMethodDecls decls = (ClassMethodDecls)classMethodDecls;
 			MethodDeclarations methodDecls = decls.getMethodDeclarations();
-		List<MethodDeclaration> methodDeclList = Finder.findMethodDeclarations(methodDecls);
-		methodDeclList.forEach(Analyzer::methodDeclarationPass);
+			List<MethodDeclaration> methodDeclList = Finder.findMethodDeclarations(methodDecls);
+			methodDeclList.forEach(Analyzer::methodDeclarationPass);
 		}
 		LocalVarDeclarations localVarDecls = body.getLocalVarDeclarations();
 		List<VarDeclarationList> varDeclLists = Finder.findVarDeclarationLists(localVarDecls);
-		varDeclLists.forEach(Analyzer::declarationListPass);
+		int cnt = 0;
+		for(VarDeclarationList list : varDeclLists){
+			cnt += declarationListPass(list);
+		}
 		Register.inClass = false;
+		return cnt;
 	}
 }
