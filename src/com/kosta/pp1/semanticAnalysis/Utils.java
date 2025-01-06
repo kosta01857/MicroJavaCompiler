@@ -5,10 +5,13 @@ import org.apache.log4j.Logger;
 import com.kosta.pp1.ast.BOOL;
 import com.kosta.pp1.ast.CHAR;
 import com.kosta.pp1.ast.Expression;
+import com.kosta.pp1.ast.Factor;
 import com.kosta.pp1.ast.Literal;
 import com.kosta.pp1.ast.NUMBER;
 import com.kosta.pp1.ast.SyntaxNode;
 import com.kosta.pp1.ast.Type;
+import com.kosta.pp1.semanticAnalysis.factorAnalyzers.FactorAnalyzer;
+import com.kosta.pp1.semanticAnalysis.factorAnalyzers.FactorAnalyzerRegistry;
 
 import rs.etf.pp1.symboltable.Tab;
 import rs.etf.pp1.symboltable.concepts.Obj;
@@ -64,6 +67,12 @@ public class Utils{
 		}
 		else if (sNode instanceof Expression){
 			S = TypeChecker.getExpressionType((Expression)sNode);
+			Register.typeMap.put(sNode,S);
+			return S;
+		}
+		else if (sNode instanceof Factor){
+			FactorAnalyzer fAnalyzer = FactorAnalyzerRegistry.getAnalyzerMap().get(sNode.getClass());
+			S = fAnalyzer.getType((Factor)sNode);
 			Register.typeMap.put(sNode,S);
 			return S;
 		}

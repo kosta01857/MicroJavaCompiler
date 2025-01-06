@@ -21,8 +21,9 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		Obj boolObj = new Obj(Obj.Type, "bool", bool);
 
 		Tab.currentScope.addToLocals(boolObj);
-		Struct set = new SetType();
+		Struct set = SetType.setType;
 		Tab.currentScope.addToLocals(new Obj(Obj.Type, "set", set));
+		Register.init();
 	}
 
 	public void visit(ProgName progName) {

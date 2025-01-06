@@ -48,24 +48,36 @@ public class Register {
 				break;
 			}
 			case "add":{
-				type.add(Tab.find("set").getType());
+				type.add(SetType.setType);
 				type.add(Tab.find("int").getType());
 				break;
 			}
 			case "addAll":{
-				type.add(Tab.find("set").getType());
-				Struct arrType = new Struct(Struct.Array);
-				arrType.setElementType(Tab.find("int").getType());
-				type.add(arrType);
+				type.add(SetType.setType);
+				type.add(new Struct(Struct.Array,Tab.intType));
 				break;
 			}
-
-				
-			
 		}
 		return type;
 	}
-	static {
+	public static void init(){
+		Obj addObj,addAllObj;
+		Tab.currentScope().addToLocals(addObj = new Obj(Obj.Meth,"add",Tab.noType,0,2));
+		{
+			Tab.openScope();
+			Tab.currentScope().addToLocals(new Obj(Obj.Var,"a",SetType.setType));
+			Tab.currentScope().addToLocals(new Obj(Obj.Var,"b",Tab.intType));
+			addObj.setLocals(Tab.currentScope().getLocals());
+			Tab.currentScope();
+		}
+		Tab.currentScope().addToLocals(addAllObj = new Obj(Obj.Meth,"addAll",Tab.noType,0,2));
+		{
+			Tab.openScope();
+			Tab.currentScope().addToLocals(new Obj(Obj.Var,"a",SetType.setType));
+			Tab.currentScope().addToLocals(new Obj(Obj.Var,"b",new Struct(Struct.Array,Tab.intType)));
+			addAllObj.setLocals(Tab.currentScope().getLocals());
+			Tab.currentScope();
+		}
 		String[] inBuiltFuncs = {"chr","ord","len","add","addAll"};
 		for(String func:inBuiltFuncs){
 			Obj o = Tab.find(func);

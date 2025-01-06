@@ -32,8 +32,7 @@ public class TypeChecker {
 	static private List<Struct> getFactorTypes (List<Factor> factors) {
 		List<Struct> exprTypes = new ArrayList<>();
 		for (Factor t : factors) {
-			FactorAnalyzer fAnalyzer = FactorAnalyzerRegistry.getAnalyzerMap().get(t.getClass());
-			exprTypes.add(fAnalyzer.getType(t));
+			exprTypes.add(Utils.inferType(t));
 		}
 		return exprTypes;
 	}

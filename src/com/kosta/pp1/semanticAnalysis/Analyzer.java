@@ -235,7 +235,7 @@ public class Analyzer {
 		typeCheck = TypeChecker.ExprTypeCheck(expr,Tab.find("int").getType());
 		typeCheck |= TypeChecker.ExprTypeCheck(expr,Tab.find("char").getType());
 		typeCheck |= TypeChecker.ExprTypeCheck(expr,Tab.find("bool").getType());
-		typeCheck |= TypeChecker.ExprTypeCheck(expr,Tab.find("set").getType());
+		typeCheck |= TypeChecker.ExprTypeCheck(expr,SetType.setType);
 		if(!typeCheck){
 			Utils.report_error("incorrect print call",stmt);
 		}
