@@ -8,7 +8,7 @@ import com.kosta.pp1.ast.NUMBER;
 import com.kosta.pp1.ast.BOOL;
 import com.kosta.pp1.ast.CHAR;
 import com.kosta.pp1.ast.FactorLiteral;
-import com.kosta.pp1.semanticAnalysis.Utils;
+import com.kosta.pp1.utils.Utils;
 import com.kosta.pp1.semanticAnalysis.TypeChecker;
 
 class FactorLiteralAnalyzer implements FactorAnalyzer{

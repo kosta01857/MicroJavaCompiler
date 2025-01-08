@@ -12,19 +12,46 @@ import com.kosta.pp1.ast.VisitorAdaptor;
 import rs.etf.pp1.symboltable.Tab;
 import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Struct;
+import com.kosta.pp1.utils.Utils;
+import com.kosta.pp1.types.SetType;
+import com.kosta.pp1.Register;
 
 public class SemanticAnalyzer extends VisitorAdaptor {
-	static Struct currentType = Tab.noType;
+	private static SemanticAnalyzer instance = null;
+	private Struct currentType = Tab.noType;
+	private boolean errorDetected = false;
 
-	public SemanticAnalyzer() {
-		Struct bool = new Struct(Struct.Bool);
-		Obj boolObj = new Obj(Obj.Type, "bool", bool);
-
-		Tab.currentScope.addToLocals(boolObj);
-		Struct set = SetType.setType;
-		Tab.currentScope.addToLocals(new Obj(Obj.Type, "set", set));
-		Register.init();
+	public Struct getCurrentType(){
+		return this.currentType;
 	}
+
+	public void setCurrentType(Struct _t){
+		this.currentType = _t;
+	}
+
+	public void setError(){
+		this.errorDetected = true;
+	}
+
+	public boolean getError(){
+		return this.errorDetected;
+	}
+
+	private Analyzer analyzer;
+	static public SemanticAnalyzer getInstance(){
+		if(instance == null){
+			instance = new SemanticAnalyzer();
+		}
+		return instance;
+	}
+
+	private SemanticAnalyzer() {
+	}
+
+	public void setAnalyzer(Analyzer _analyzer){
+		this.analyzer = _analyzer;
+	}
+	
 
 	public void visit(ProgName progName) {
 		Tab.insert(Obj.Prog, progName.getName(), Tab.noType);
@@ -32,45 +59,32 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	}
 
 	public void visit(Program program) {
-		Obj programNode = Tab.find(program.getProgName().getName());
-		Tab.chainLocalSymbols(programNode);
-		Boolean found = Finder.findMainFunction();
-		if(!found){
-			Utils.report_error("main function that matches requirements not found!",null);
-		}
-		Tab.closeScope();
+		analyzer.programPass(program);
 	}
 
 	public void visit(GlobalVarDeclarationList globalVarDeclaration) {
 		VarDeclarationList varDeclarationList = globalVarDeclaration.getVarDeclarationList();
-		Utils.report_info("Global variables:", null);
-		Analyzer.declarationListPass(varDeclarationList);
+		analyzer.declarationListPass(varDeclarationList);
 	}
 
 	public void visit(ConstDeclarationList list) {
-		Analyzer.definitionListPass(list);
+		analyzer.definitionListPass(list);
 	}
 
 	public void visit(MethodDefinitionNoLocals def) {
-		Analyzer.methodDeclarationPass(def);
+		analyzer.methodDeclarationPass(def);
 	}
 
 	public void visit(MethodDefinition methodDefinition) {
-		Analyzer.methodDeclarationPass(methodDefinition);
+		analyzer.methodDeclarationPass(methodDefinition);
 	}
 
 	public void visit(ClassDeclarationExtend classDecl){
-		Utils.report_info("Class declaration", null);
-		Obj classObj = Register.registerClass(classDecl);
-		Tab.chainLocalSymbols(classObj);
-		Tab.closeScope();
+		analyzer.classDeclarationPass(classDecl);
 	}
 
 	public void visit(ClassDeclarationNoExtend classDecl){
-		Utils.report_info("Class declaration", null);
-		Obj classObj = Register.registerClass(classDecl);
-		Tab.chainLocalSymbols(classObj);
-		Tab.closeScope();
+		analyzer.classDeclarationPass(classDecl);
 	}
 	
 }

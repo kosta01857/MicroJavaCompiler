@@ -15,9 +15,9 @@ import com.kosta.pp1.ast.Factor;
 import com.kosta.pp1.ast.FactorIdent;
 import com.kosta.pp1.ast.MemberAccess;
 import com.kosta.pp1.ast.NoTail;
-import com.kosta.pp1.semanticAnalysis.SetType;
+import com.kosta.pp1.types.SetType;
 import com.kosta.pp1.semanticAnalysis.TypeChecker;
-import com.kosta.pp1.semanticAnalysis.Utils;
+import com.kosta.pp1.utils.Utils;
 
 class FactorIdentAnalyzer implements FactorAnalyzer{
 	@Override

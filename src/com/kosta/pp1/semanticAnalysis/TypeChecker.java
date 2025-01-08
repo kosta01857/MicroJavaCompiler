@@ -3,6 +3,7 @@ package com.kosta.pp1.semanticAnalysis;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.kosta.pp1.Register;
 import com.kosta.pp1.ast.ActPars;
 import com.kosta.pp1.ast.ActParsConcrete;
 import com.kosta.pp1.ast.AddTerm;
@@ -26,6 +27,7 @@ import com.kosta.pp1.semanticAnalysis.factorAnalyzers.FactorAnalyzerRegistry;
 import rs.etf.pp1.symboltable.Tab;
 import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Struct;
+import com.kosta.pp1.utils.Utils;
 
 public class TypeChecker {
 	public static boolean minus = false;
@@ -84,7 +86,7 @@ public class TypeChecker {
 		if (funcObj == Tab.noObj || arrObj == Tab.noObj) {
 			return null;
 		}
-		List<Struct> argType = Register.functionTypeMap.get(funcObj);
+		List<Struct> argType = Register.getInstance().getFunctionTypeMap().get(funcObj);
 		Boolean funcCheck = funcObj.getKind() == Obj.Meth;
 		funcCheck &= funcObj.getLevel() == 1;
 		funcCheck &= funcObj.getType().getKind() == Struct.Int;
@@ -149,7 +151,7 @@ public class TypeChecker {
 	 * @return Returns true if call matches the signature
 	 */
 	static boolean actParsTypeCheck(ActPars actPars, Obj currentFunction) {
-		List<Struct> args = Register.functionTypeMap.get(currentFunction);
+		List<Struct> args = Register.getInstance().getFunctionTypeMap().get(currentFunction);
 		if (actPars instanceof ActParsConcrete) {
 			ActParsConcrete actParamsC = (ActParsConcrete) actPars;
 			List<Expression> expressions = Finder.findExpressions(actParamsC.getExpressions());

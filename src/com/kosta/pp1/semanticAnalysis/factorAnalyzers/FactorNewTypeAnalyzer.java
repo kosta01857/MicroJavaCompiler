@@ -10,7 +10,7 @@ import com.kosta.pp1.ast.NewClass;
 import com.kosta.pp1.ast.NewArray;
 import com.kosta.pp1.ast.Type;
 import com.kosta.pp1.ast.Expression;
-import com.kosta.pp1.semanticAnalysis.Utils;
+import com.kosta.pp1.utils.Utils;
 import com.kosta.pp1.semanticAnalysis.TypeChecker;
 
 class FactorNewTypeAnalyzer implements FactorAnalyzer{

@@ -63,7 +63,7 @@ nonterminal VarDeclarationList, MethodSignatures, InterfaceBody, MethodList;
 nonterminal InterfaceElements, InterfaceElement, DesignatorTail, VarDeclarationListGlobal;
 nonterminal ProgName, Program, ClassMethodDeclarations;
 nonterminal Type, VarDeclaration, IdDefinitionList, ConstDeclarationList, IdentDecl;
-nonterminal rs.etf.pp1.symboltable.concepts.Struct IdDeclaration;
+nonterminal IdDeclaration;
 
 precedence left ELSE;
 
@@ -131,7 +131,7 @@ IdDefinitionList ::= (IdDefinitionListConcrete)  IdDefinition:IdDefinition
 
 
 LocalVarDeclarations ::=   (LocalVarDeclarationsRecursive) LocalVarDeclarations:LocalVarDeclarations VarDeclarationList:declList
-						 | (LocalVarDeclarationsConcrete)VarDeclarationList:declList
+					 	 | (LocalVarDeclarationsConcrete)VarDeclarationList:declList
 					     ;
 
 VarDeclarationList ::= (VarDeclarationList) Type:type VarDeclaration:VarDeclaration SEMI;

@@ -1,4 +1,4 @@
-package com.kosta.pp1.semanticAnalysis;
+package com.kosta.pp1.utils;
 
 import org.apache.log4j.Logger;
 
@@ -16,6 +16,10 @@ import com.kosta.pp1.semanticAnalysis.factorAnalyzers.FactorAnalyzerRegistry;
 import rs.etf.pp1.symboltable.Tab;
 import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Struct;
+import com.kosta.pp1.semanticAnalysis.SemanticAnalyzer;
+import com.kosta.pp1.Register;
+import com.kosta.pp1.types.SetType;
+import com.kosta.pp1.semanticAnalysis.TypeChecker;
 
 public class Utils{
 	
@@ -27,7 +31,7 @@ public class Utils{
 		Field("Field"),
 		Element("Element"),
 		Prog("Program");
-		String name;
+		public String name;
 		ObjectName(String s){
 			this.name = s;
 		}
@@ -54,26 +58,27 @@ public class Utils{
 	* @return Struct object associated with Type object, if Type is of unknown type, it will return noType
 	 */
 	static public Struct inferType(SyntaxNode sNode){
-		Struct S = Register.typeMap.get(sNode);
+		Struct S = Register.getInstance().getTypeMap().get(sNode);
+
 		if(S != null) return S;
 		if(sNode instanceof Type){
 			String typeName = ((Type)sNode).getTypeName();
 			Obj typeNode = Tab.find(typeName);
 			if(typeNode.getKind() == Obj.Type){
-				Register.typeMap.put(sNode,typeNode.getType());
+				Register.getInstance().getTypeMap().put(sNode,typeNode.getType());
 				return typeNode.getType();
 			}
 			return Tab.noType;
 		}
 		else if (sNode instanceof Expression){
 			S = TypeChecker.getExpressionType((Expression)sNode);
-			Register.typeMap.put(sNode,S);
+			Register.getInstance().getTypeMap().put(sNode,S);
 			return S;
 		}
 		else if (sNode instanceof Factor){
 			FactorAnalyzer fAnalyzer = FactorAnalyzerRegistry.getAnalyzerMap().get(sNode.getClass());
 			S = fAnalyzer.getType((Factor)sNode);
-			Register.typeMap.put(sNode,S);
+			Register.getInstance().getTypeMap().put(sNode,S);
 			return S;
 		}
 		return Tab.noType;
@@ -134,6 +139,7 @@ public class Utils{
 		if (line != 0)
 			msg.append (" at line ").append(line);
 		log.error(msg.toString());
+		SemanticAnalyzer.getInstance().setError();
 	}
 	
 	static public void report_info(String message, SyntaxNode info) {

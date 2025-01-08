@@ -1,7 +1,8 @@
 package com.kosta.pp1.semanticAnalysis;
-
+import com.kosta.pp1.utils.Utils;
 import com.kosta.pp1.ast.Break;
 import com.kosta.pp1.ast.ClassBody;
+import com.kosta.pp1.ast.ClassDeclaration;
 import com.kosta.pp1.ast.ClassMethodDeclarations;
 import com.kosta.pp1.ast.ClassMethodDecls;
 import com.kosta.pp1.ast.Condition;
@@ -21,14 +22,14 @@ import com.kosta.pp1.ast.WhileCond;
 import com.kosta.pp1.ast.WhileDesignator;
 import com.kosta.pp1.ast.WhileSimple;
 import com.kosta.pp1.ast.WhileStmt;
+import com.kosta.pp1.types.SetType;
+
 import rs.etf.pp1.symboltable.Tab;
 import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Struct;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.kosta.pp1.ast.IdDeclaration;
 import com.kosta.pp1.ast.IdDefinition;
@@ -48,6 +49,7 @@ import com.kosta.pp1.ast.PrintOne;
 import com.kosta.pp1.ast.PrintStatement;
 import com.kosta.pp1.ast.PrintStmt;
 import com.kosta.pp1.ast.PrintTwo;
+import com.kosta.pp1.ast.Program;
 import com.kosta.pp1.ast.ReadStatement;
 import com.kosta.pp1.ast.ReturnStatement;
 import com.kosta.pp1.ast.ReturnStmt;
@@ -58,13 +60,38 @@ import com.kosta.pp1.ast.Statement;
 import com.kosta.pp1.ast.StatementBlock;
 import com.kosta.pp1.ast.Statements;
 import com.kosta.pp1.ast.Type;
+import com.kosta.pp1.Register;
 
 public class Analyzer {
-	static boolean inDoWhile = false;
-	static boolean returnFound = false;
-	static Obj currentFunction = null;
+	private boolean inDoWhile = false;
+	private boolean returnFound = false;
+	private Obj currentFunction = null;
+	private static Analyzer instance = null;
+	private Analyzer(){
+	}
+	private Register register;
+	public static Analyzer getInstance(){
+		if(instance == null){
+			instance = new Analyzer();
+		}
+		return instance;
+	}
 
-	static void varDesignationPass(VarDesignation varDesignation) {
+	public void setRegister(Register _reg){
+		this.register = _reg;
+	}
+
+	public void programPass(Program prog){
+		Obj programNode = Tab.find(prog.getProgName().getName());
+		Tab.chainLocalSymbols(programNode);
+		Boolean found = Finder.findMainFunction();
+		if(!found){
+			Utils.report_error("main function that matches requirements not found!",null);
+		}
+		Tab.closeScope();
+	}
+
+	public void varDesignationPass(VarDesignation varDesignation) {
 		Expression expr = varDesignation.getExpression();
 		String name = varDesignation.getDesignator().getName();
 		if (!Utils.objExists(name)) {
@@ -85,29 +112,30 @@ public class Analyzer {
 		Utils.reportUse(ident, varDesignation);
 	}
 
-	static int declarationListPass(VarDeclarationList list) {
+
+	public int declarationListPass(VarDeclarationList list) {
 		Type type = list.getType();
 		Struct struct = Utils.inferType(type);
 		if (struct == Tab.noType) {
 			Utils.report_error("Type of name " + type.getTypeName() + " doesnt exist", list);
 			return 0;
 		}
-		SemanticAnalyzer.currentType = struct;
+		SemanticAnalyzer.getInstance().setCurrentType(struct);
 		List<IdDeclaration> idDecls = Finder.findIdDeclarations(list.getVarDeclaration());
-		idDecls.forEach(Register::registerIdDeclaration);
+		idDecls.forEach(register::registerVariableDeclaration);
 		return idDecls.size();
 	}
 
-	static void definitionListPass(ConstDeclarationList list) {
+	public void definitionListPass(ConstDeclarationList list) {
 		Type type = list.getType();
 		Struct struct = Utils.inferType(type);
 		if (struct == Tab.noType) {
 			Utils.report_error("Type of name " + type.getTypeName() + " doesnt exist", list);
 			return;
 		}
-		SemanticAnalyzer.currentType = struct;
+		SemanticAnalyzer.getInstance().setCurrentType(struct);
 		List<IdDefinition> idDecls = Finder.findIdDefinitions(list.getIdDefinitionList());
-		idDecls.forEach(Register::registerIdDefinition);
+		idDecls.forEach(register::registerVariableDefinition);
 	}
 
 	static void postIncPass(PostInc postIncExpr) {
@@ -127,7 +155,7 @@ public class Analyzer {
 		}
 	}
 
-	static void setDesignationPass(SetDesignation setDesignation) {
+	public void setDesignationPass(SetDesignation setDesignation) {
 		Designator leftD = setDesignation.getDesignator();
 		Designator op1 = setDesignation.getDesignator1();
 		Designator op2 = setDesignation.getDesignator2();
@@ -160,7 +188,7 @@ public class Analyzer {
 		}
 	}
 
-	static void designatorStatementPass(DesignatorStatement dStatement) {
+	public void designatorStatementPass(DesignatorStatement dStatement) {
 		if (dStatement instanceof PostDec) {
 			postDecPass((PostDec) dStatement);
 		} else if (dStatement instanceof PostInc) {
@@ -174,7 +202,7 @@ public class Analyzer {
 		}
 	}
 
-	static void functionCallPass(FunctionCall call) {
+	public void functionCallPass(FunctionCall call) {
 		Designator d = call.getDesignator();
 		String name = d.getName();
 		if (!Utils.objExists(name)) {
@@ -190,7 +218,7 @@ public class Analyzer {
 		TypeChecker.actParsTypeCheck(call.getActPars(), currentFunction);
 	}
 
-	static void statementPass(Statement statement) {
+	public void statementPass(Statement statement) {
 		if (statement instanceof StatementBlock) {
 			StatementBlock stmtBlk = (StatementBlock) statement;
 			statementsPass(stmtBlk.getStatements());
@@ -220,7 +248,7 @@ public class Analyzer {
 		}
 	}
 
-	static void printStatementPass(PrintStmt stmt){
+	public void printStatementPass(PrintStmt stmt){
 		PrintStatement printStmt = stmt.getPrintStatement();
 		Expression expr;
 		if (printStmt instanceof PrintOne){
@@ -235,13 +263,13 @@ public class Analyzer {
 		typeCheck = TypeChecker.ExprTypeCheck(expr,Tab.find("int").getType());
 		typeCheck |= TypeChecker.ExprTypeCheck(expr,Tab.find("char").getType());
 		typeCheck |= TypeChecker.ExprTypeCheck(expr,Tab.find("bool").getType());
-		typeCheck |= TypeChecker.ExprTypeCheck(expr,SetType.setType);
+		typeCheck |= TypeChecker.ExprTypeCheck(expr,SetType.getInstance());
 		if(!typeCheck){
 			Utils.report_error("incorrect print call",stmt);
 		}
 	}
 	
-	static void readStatementPass(ReadStatement stmt){
+	public void readStatementPass(ReadStatement stmt){
 		Designator designator = stmt.getDesignator();
 		boolean typeCheck;
 		String name = designator.getName();
@@ -262,7 +290,7 @@ public class Analyzer {
 		}
 	}
 
-	static void returnStatementPass(ReturnStmt stmt) {
+	public void returnStatementPass(ReturnStmt stmt) {
 		ReturnStatement retStmt = stmt.getReturnStatement();
 		if (retStmt instanceof ReturnVoid) {
 			if (currentFunction.getType().getKind() != Struct.None) {
@@ -282,19 +310,19 @@ public class Analyzer {
 		}
 	}
 
-	static void statementsPass(Statements statements) {
+	public void statementsPass(Statements statements) {
 		List<Statement> list = Finder.findStatements(statements);
-		list.forEach(Analyzer::statementPass);
+		list.forEach(this::statementPass);
 	}
 
-	static void conditionPass(Condition cond) {
+	public void conditionPass(Condition cond) {
 		List<ConditionTerm> terms = Finder.findConditionTerms(cond);
 		List<ConditionFact> condFactors = new ArrayList<>();
 		terms.forEach(term -> condFactors.addAll(Finder.findConditionFactors(term)));
 		TypeChecker.conditionTypeCheck(condFactors);
 	}
 
-	static void postDecPass(PostDec postDecExpr) {
+	public void postDecPass(PostDec postDecExpr) {
 		Designator d = postDecExpr.getDesignator();
 		String name = d.getName();
 		Utils.report_info("use of variable " + name, postDecExpr);
@@ -315,17 +343,23 @@ public class Analyzer {
 		}
 	}
 
-	static void methodDeclarationPass(MethodDeclaration decl){
+	public void localVariablesPass(LocalVarDeclarations localVarDeclaration){
+		List<VarDeclarationList> declLists = Finder.findVarDeclarationLists(localVarDeclaration);
+		Utils.report_info("Local variables:", null);
+		declLists.forEach(this::declarationListPass);
+	}
+
+	public void methodDeclarationPass(MethodDeclaration decl){
 		if (decl instanceof MethodDefinitionNoLocals){
 			MethodDefinitionNoLocals methodDef = (MethodDefinitionNoLocals)decl;
 			MethodSignature signature = methodDef.getMethodSignature();
 			Statements statements = methodDef.getStatements();
-			Obj funcObj = Register.registerMethod(signature);
+			Obj funcObj = register.registerMethod(signature);
 			Tab.chainLocalSymbols(funcObj);
-			Analyzer.currentFunction = funcObj;
-			Analyzer.returnFound = false;
-			Analyzer.statementsPass(statements);
-			if(funcObj.getType().getKind() != Struct.None && !Analyzer.returnFound){
+			currentFunction = funcObj;
+			returnFound = false;
+			statementsPass(statements);
+			if(funcObj.getType().getKind() != Struct.None && !returnFound){
 				Utils.report_error("function "+funcObj.getName() + " must have a return statement",methodDef);
 			}
 			Tab.closeScope();
@@ -335,13 +369,13 @@ public class Analyzer {
 			MethodSignature signature = methodDefinition.getMethodSignature();
 			LocalVarDeclarations varDecls = methodDefinition.getLocalVarDeclarations();
 			Statements statements = methodDefinition.getStatements();
-			Obj funcObj = Register.registerMethod(signature);
-			Register.registerLocalVariables(varDecls);
+			Obj funcObj = register.registerMethod(signature);
+			this.localVariablesPass(varDecls);
 			Tab.chainLocalSymbols(funcObj);
-			Analyzer.currentFunction = funcObj;
-			Analyzer.returnFound = false;
-			Analyzer.statementsPass(statements);
-			if(funcObj.getType().getKind() != Struct.None && !Analyzer.returnFound){
+			currentFunction = funcObj;
+			returnFound = false;
+			statementsPass(statements);
+			if(funcObj.getType().getKind() != Struct.None && !returnFound){
 				Utils.report_error("function "+funcObj.getName() + " must have a return statement",methodDefinition);
 			}
 			Tab.closeScope();
@@ -349,7 +383,7 @@ public class Analyzer {
 		}
 	}
 
-	static void ifPass(IfStmt stmt) {
+	public void ifPass(IfStmt stmt) {
 		IfStatement statement = stmt.getIfStatement();
 		if (statement instanceof IfOnly) {
 			IfOnly ifOnly = (IfOnly) statement;
@@ -368,7 +402,7 @@ public class Analyzer {
 		}
 	}
 
-	static void whilePass(WhileStmt stmt) {
+	public void whilePass(WhileStmt stmt) {
 		DoWhile doWhile = stmt.getDoWhile();
 		inDoWhile = true;
 		if (doWhile instanceof WhileCond) {
@@ -386,15 +420,26 @@ public class Analyzer {
 		}
 		inDoWhile = false;
 	}
+
+	public void classDeclarationPass(ClassDeclaration classDecl){
+		Utils.report_info("Class declaration", null);
+		Obj classObj = register.registerClass(classDecl);
+		Tab.openScope();
+		ClassBody body = Finder.findClassBody(classDecl);
+		this.classBodyPass(body);
+		classObj.getType().setMembers(Tab.currentScope().getLocals());
+		Tab.chainLocalSymbols(classObj);
+		Tab.closeScope();
+	}
 	
-	static int classBodyPass(ClassBody body){
-		Register.inClass = true;
+	public int classBodyPass(ClassBody body){
+		register.setInClass(true);
 		ClassMethodDeclarations classMethodDecls = body.getClassMethodDeclarations();
 		if (classMethodDecls instanceof ClassMethodDecls){
 			ClassMethodDecls decls = (ClassMethodDecls)classMethodDecls;
 			MethodDeclarations methodDecls = decls.getMethodDeclarations();
 			List<MethodDeclaration> methodDeclList = Finder.findMethodDeclarations(methodDecls);
-			methodDeclList.forEach(Analyzer::methodDeclarationPass);
+			methodDeclList.forEach(this::methodDeclarationPass);
 		}
 		LocalVarDeclarations localVarDecls = body.getLocalVarDeclarations();
 		List<VarDeclarationList> varDeclLists = Finder.findVarDeclarationLists(localVarDecls);
@@ -402,7 +447,7 @@ public class Analyzer {
 		for(VarDeclarationList list : varDeclLists){
 			cnt += declarationListPass(list);
 		}
-		Register.inClass = false;
+		register.setInClass(false);
 		return cnt;
 	}
 }

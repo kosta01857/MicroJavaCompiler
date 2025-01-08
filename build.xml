@@ -1,13 +1,16 @@
 <project name="MJCompiler" basedir="." default="compile">
-	<property name="destdir" value="bin"/>
+	<property name="bin.dir" value="bin"/>
+	<property name="config.dir" value="config"/>
 	
 	<target name="clean">
 		<delete>
 			<fileset dir="./src/com/kosta/pp1">
 				<exclude name="RuleVisitor.java"/>
+				<exclude name="Register.java"/>
 				<exclude name="semanticAnalysis/**"/>
 				<exclude name="codeGeneration/**"/>
 				<exclude name="utils/**"/>
+				<exclude name="types/**"/>
 			</fileset>
 			<fileset dir="logs">
 			</fileset>
@@ -57,8 +60,8 @@
 	</target>
 	
 	<target name="compile" depends="generateLexer">
-		<mkdir dir="${destdir}"/>
-		<javac srcdir="./src/com/kosta/pp1" includeantruntime="false" destdir="${destdir}">
+		<mkdir dir="${bin.dir}"/>
+		<javac srcdir="./src/com/kosta/pp1" includeantruntime="false" destdir="${bin.dir}">
 			<classpath>
 				<pathelement path="./lib/JFlex.jar"/>
 				<pathelement path="./lib/cup_v10k.jar"/>
@@ -67,7 +70,7 @@
 				<pathelement path="./lib/mj-runtime-1.1.jar"/>
 			</classpath>
 		</javac>
-		<javac srcdir="./test/com/kosta/pp1" includeantruntime="false" destdir="${destdir}">
+		<javac srcdir="./test/com/kosta/pp1" includeantruntime="false" destdir="${bin.dir}">
 			<classpath>
 				<pathelement path="./lib/JFlex.jar"/>
 				<pathelement path="./lib/cup_v10k.jar"/>
@@ -76,13 +79,16 @@
 				<pathelement path="./lib/mj-runtime-1.1.jar"/>
 			</classpath>
 		</javac>
+		<copy todir="${bin.dir}">
+            <fileset dir="${config.dir}" includes="**/*.xml"/>
+        </copy>
 	</target>
 
 
 	<target name="runCompiler">
 		<java fork="true" classname="com.kosta.pp1.Compiler">
 			<classpath>
-				<pathelement path="${destdir}"/>
+				<pathelement path="${bin.dir}"/>
 				<pathelement path="./lib/mj-runtime-1.1.jar"/>
 				<pathelement path="./lib/JFlex.jar"/>
 				<pathelement path="./lib/cup_v10k.jar"/>
