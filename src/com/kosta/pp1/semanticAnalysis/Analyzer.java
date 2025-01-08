@@ -112,7 +112,6 @@ public class Analyzer {
 		Utils.reportUse(ident, varDesignation);
 	}
 
-
 	public int declarationListPass(VarDeclarationList list) {
 		Type type = list.getType();
 		Struct struct = Utils.inferType(type);
@@ -138,7 +137,7 @@ public class Analyzer {
 		idDecls.forEach(register::registerVariableDefinition);
 	}
 
-	static void postIncPass(PostInc postIncExpr) {
+	public void postIncPass(PostInc postIncExpr) {
 		Designator d = postIncExpr.getDesignator();
 		String name = d.getName();
 		Utils.report_info("use of variable " + name, postIncExpr);

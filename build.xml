@@ -7,6 +7,7 @@
 			<fileset dir="./src/com/kosta/pp1">
 				<exclude name="RuleVisitor.java"/>
 				<exclude name="Register.java"/>
+				<exclude name="Compiler.java"/>
 				<exclude name="semanticAnalysis/**"/>
 				<exclude name="codeGeneration/**"/>
 				<exclude name="utils/**"/>
